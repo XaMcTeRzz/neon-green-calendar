@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,12 +44,12 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
           </div>
           <button
             onClick={handleAddTask}
-            className="neon-button p-1 w-8 h-8 flex items-center justify-center"
+            className="neon-button p-1 w-10 h-10 flex items-center justify-center"
             aria-label="Додати задачу"
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
           >
-            <Plus className={`h-5 w-5 ${isHovering ? 'animate-spin-slow' : ''}`} />
+            <Plus className={`h-6 w-6 ${isHovering ? 'animate-spin-slow' : ''}`} />
           </button>
         </div>
         <Calendar

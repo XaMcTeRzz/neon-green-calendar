@@ -294,8 +294,6 @@ const Index = () => {
                 <Settings />
               </div>
             )}
-            
-            <AddTaskButton onAddTask={() => handleAddTask(new Date())} />
           </>
         )}
       </div>
