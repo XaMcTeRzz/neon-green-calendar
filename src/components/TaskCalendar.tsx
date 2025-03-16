@@ -17,22 +17,45 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
   const [date, setDate] = useState<Date>(selectedDate);
   const [isHovering, setIsHovering] = useState(false);
 
+  // Правильні назви місяців у родовому відмінку
+  const months = [
+    'січня', 'лютого', 'березня', 'квітня', 'травня', 'червня',
+    'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'
+  ];
+
+  // Правильні назви днів тижня
+  const daysOfWeek = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+
   const handleSelect = (newDate: Date | null) => {
     if (newDate) {
       setDate(newDate);
       onDateSelect(newDate);
+      
+      // Форматуємо дату з правильним відмінком місяця
+      const day = newDate.getDate();
+      const month = months[newDate.getMonth()];
+      const year = newDate.getFullYear();
+      const formattedDate = `${day} ${month} ${year}`;
+      
       toast({
         title: "Дату вибрано",
-        description: `Вибрано ${newDate.toLocaleDateString('uk')}`,
+        description: `Вибрано ${formattedDate}`,
       });
     }
   };
 
   const handleAddTask = () => {
     onAddTask(date);
+    
+    // Форматуємо дату з правильним відмінком місяця
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    const formattedDate = `${day} ${month} ${year}`;
+    
     toast({
       title: "Додавання задачі",
-      description: `Створення нової задачі на ${date.toLocaleDateString('uk')}`,
+      description: `Створення нової задачі на ${formattedDate}`,
     });
   };
 
@@ -45,26 +68,35 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
       background-color: rgba(0, 0, 0, 0.2);
       backdrop-filter: blur(10px);
       box-shadow: 0 0 15px rgba(57, 255, 20, 0.3);
+      text-align: center;
     }
     .react-datepicker__header {
       background-color: transparent;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       padding-top: 0.8rem;
+      text-align: center;
     }
     .react-datepicker__current-month {
       color: rgba(57, 255, 20, 0.9);
       font-weight: 600;
       margin-bottom: 0.5rem;
+      text-align: center;
     }
     .react-datepicker__day-name {
       color: rgba(255, 255, 255, 0.7);
       margin: 0.4rem;
+      text-align: center;
+      width: 2rem;
     }
     .react-datepicker__day {
       margin: 0.4rem;
       color: rgba(255, 255, 255, 0.9);
       border-radius: 0.3rem;
       transition: all 0.2s ease;
+      text-align: center;
+      width: 2rem;
+      height: 2rem;
+      line-height: 2rem;
     }
     .react-datepicker__day:hover {
       background-color: rgba(57, 255, 20, 0.2);
@@ -86,7 +118,22 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
     .react-datepicker__navigation:hover *::before {
       border-color: rgba(57, 255, 20, 1);
     }
+    .react-datepicker__month {
+      margin: 0.4rem;
+    }
+    .react-datepicker__month-text {
+      text-align: center;
+    }
   `;
+
+  // Функція для форматування назви місяця в називному відмінку
+  const formatMonthName = (date: Date) => {
+    const monthsNominative = [
+      'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
+      'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'
+    ];
+    return `${monthsNominative[date.getMonth()]} ${date.getFullYear()}`;
+  };
 
   return (
     <Card className="glass-card overflow-hidden w-full max-w-sm animate-float shadow-[0_0_15px_rgba(57,255,20,0.5)] hover:shadow-[0_0_25px_rgba(57,255,20,0.7)]">
@@ -114,11 +161,40 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
           onChange={handleSelect}
           inline
           locale={uk}
-          calendarClassName="w-full"
+          calendarClassName="w-full text-center"
           dayClassName={date => 
             "hover:bg-opacity-20 hover:bg-neon-green"
           }
-          formatWeekDay={nameOfDay => nameOfDay.substring(0, 3)}
+          formatWeekDay={nameOfDay => daysOfWeek[new Date(nameOfDay).getDay()]}
+          renderCustomHeader={({
+            date,
+            decreaseMonth,
+            increaseMonth,
+            prevMonthButtonDisabled,
+            nextMonthButtonDisabled
+          }) => (
+            <div className="flex justify-center items-center px-2 py-1">
+              <button
+                onClick={decreaseMonth}
+                disabled={prevMonthButtonDisabled}
+                className="px-2 py-1 hover:text-neon-green"
+                aria-label="Попередній місяць"
+              >
+                {"<"}
+              </button>
+              <div className="text-neon-green font-semibold mx-2">
+                {formatMonthName(date)}
+              </div>
+              <button
+                onClick={increaseMonth}
+                disabled={nextMonthButtonDisabled}
+                className="px-2 py-1 hover:text-neon-green"
+                aria-label="Наступний місяць"
+              >
+                {">"}
+              </button>
+            </div>
+          )}
         />
       </CardContent>
     </Card>
