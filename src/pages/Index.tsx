@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { TaskCalendar } from "@/components/TaskCalendar";
 import { TasksList, Task } from "@/components/TasksList";
@@ -51,6 +51,10 @@ const Index = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
+  
+  // Додаємо стан для відстеження статусу прослуховування Джарвіса
+  const [isJarvisListening, setIsJarvisListening] = useState(false);
+  const jarvisRef = useRef<{ startListening?: () => void }>(null);
   
   useEffect(() => {
     const savedTasks = localStorage.getItem('tasks');
@@ -244,6 +248,13 @@ const Index = () => {
     });
   };
   
+  // Функція для активації мікрофона Джарвіса
+  const handleJarvisMicClick = () => {
+    if (jarvisRef.current && jarvisRef.current.startListening) {
+      jarvisRef.current.startListening();
+    }
+  };
+  
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground pb-16 relative">
       <div className="container max-w-md mx-auto px-4 py-6 flex items-center justify-center flex-col relative">
@@ -300,13 +311,20 @@ const Index = () => {
 
       {/* Джарвіс завжди доступний у будь-якому стані та меню */}
       <JarvisAssistant 
+        ref={jarvisRef}
         tasks={tasks}
         selectedDate={selectedDate}
         onFilterDate={handleDateSelect}
         onAddTask={() => setShowAddTask(true)}
+        onListeningChange={setIsJarvisListening}
       />
       
-      <BottomNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+      <BottomNavigation 
+        activeTab={activeTab} 
+        onTabChange={handleTabChange} 
+        onMicClick={handleJarvisMicClick}
+        isListening={isJarvisListening}
+      />
 
       {showAddTask && (
         <AddTaskDialog

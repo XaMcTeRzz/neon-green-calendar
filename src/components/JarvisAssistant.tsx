@@ -7,9 +7,10 @@ import { SpeechRecognition, SpeechRecognitionEvent } from "@/types/speech-recogn
 
 interface JarvisAssistantProps {
   tasks: Task[];
-  selectedDate: Date;
-  onFilterDate: (date: Date) => void;
-  onAddTask?: (date: Date) => void;
+  selectedDate?: Date;
+  onFilterDate?: (date: Date) => void;
+  onAddTask?: () => void;
+  onListeningChange?: (isListening: boolean) => void;
 }
 
 // Перелік команд, які розуміє Джарвіс
@@ -60,7 +61,11 @@ const formatTime = (date: Date): string => {
   }).format(date);
 };
 
-export function JarvisAssistant({ tasks, selectedDate, onFilterDate, onAddTask }: JarvisAssistantProps) {
+// Створюємо компонент з підтримкою ref
+export const JarvisAssistant = React.forwardRef<
+  { startListening: () => void },
+  JarvisAssistantProps
+>(({ tasks, selectedDate, onFilterDate, onAddTask, onListeningChange }, ref) => {
   // Стан прослуховування
   const [isListening, setIsListening] = useState(false);
   // Стан відтворення відповіді Джарвіса 
@@ -84,6 +89,20 @@ export function JarvisAssistant({ tasks, selectedDate, onFilterDate, onAddTask }
   const [jarvisSettings, setJarvisSettings] = useState<JarvisSettings>(DEFAULT_SETTINGS);
   // Стан для показу діалогу налаштувань
   const [showSettings, setShowSettings] = useState<boolean>(false);
+
+  // Експортуємо функцію startListening через ref
+  React.useImperativeHandle(ref, () => ({
+    startListening: () => {
+      startListening();
+    }
+  }));
+
+  // Оновлюємо батьківський компонент про зміну стану прослуховування
+  useEffect(() => {
+    if (onListeningChange) {
+      onListeningChange(isListening);
+    }
+  }, [isListening, onListeningChange]);
 
   // При завантаженні компонента, завантажуємо збережені задачі
   useEffect(() => {
@@ -372,25 +391,49 @@ export function JarvisAssistant({ tasks, selectedDate, onFilterDate, onAddTask }
     };
   }, [isListening, isSpeaking]);
   
-  // Запуск прослуховування
+  // Функція для початку прослуховування
   const startListening = () => {
     if (recognitionRef.current) {
       try {
-        recognitionRef.current.start();
+        // Оновлюємо стан
         setIsListening(true);
-        speakText("Слухаю вас");
-        console.log("Мікрофон активований");
+        setRecognizedText("");
+        
+        // Генеруємо випадкові висоти для анімації
+        const heights = Array.from({ length: 10 }, () => 
+          Math.floor(Math.random() * 60) + 20
+        );
+        setWaveform(heights);
+        
+        // Запускаємо розпізнавання
+        recognitionRef.current.start();
+        
+        // Оновлюємо анімацію кожні 100мс
+        const interval = setInterval(() => {
+          const newHeights = Array.from({ length: 10 }, () => 
+            Math.floor(Math.random() * 60) + 20
+          );
+          setWaveform(newHeights);
+        }, 100);
+        
+        // Зупиняємо анімацію після 5 секунд, якщо немає результату
+        setTimeout(() => {
+          if (isListening) {
+            clearInterval(interval);
+            setIsListening(false);
+            if (recognitionRef.current) {
+              recognitionRef.current.stop();
+            }
+          }
+        }, 5000);
+        
+        return () => clearInterval(interval);
       } catch (error) {
-        console.error('Помилка при запуску розпізнавання мови:', error);
-        // Якщо помилка "already started", не показуємо помилку
-        if (!(error instanceof DOMException && error.message.includes("already started"))) {
-          toast({
-            title: "Помилка активації",
-            description: "Не вдалося запустити голосове розпізнавання",
-            variant: "destructive",
-          });
-        }
+        console.error("Помилка при запуску розпізнавання:", error);
+        setIsListening(false);
       }
+    } else {
+      console.error("Розпізнавання мови не підтримується");
     }
   };
   
@@ -791,20 +834,11 @@ export function JarvisAssistant({ tasks, selectedDate, onFilterDate, onAddTask }
           )}
         </div>
       )}
-      
-      {/* Кнопки */}
-      <div className="flex gap-2">
-        {/* Видаляємо кнопку налаштувань, залишаємо тільки кнопку мікрофона */}
-        <Button
-          variant="secondary"
-          size="icon"
-          className={`h-12 w-12 rounded-full shadow-lg ${isListening ? "bg-yellow-400 text-black" : "bg-neon-green text-black hover:bg-green-400"}`}
-          onClick={startListening}
-          disabled={isListening}
-        >
-          {isListening ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-        </Button>
-      </div>
     </div>
   );
-} 
+});
+
+JarvisAssistant.displayName = "JarvisAssistant";
+
+// Експортуємо додаткові властивості для використання в інших компонентах
+export { type JarvisAssistantProps }; 

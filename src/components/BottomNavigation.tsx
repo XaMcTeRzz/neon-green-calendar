@@ -1,11 +1,13 @@
-import { Calendar, ListTodo, Settings as SettingsIcon } from "lucide-react";
+import { Calendar, ListTodo, Settings as SettingsIcon, Mic } from "lucide-react";
 
 interface BottomNavigationProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  onMicClick?: () => void;
+  isListening?: boolean;
 }
 
-export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationProps) {
+export function BottomNavigation({ activeTab, onTabChange, onMicClick, isListening = false }: BottomNavigationProps) {
   return (
     <div className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t flex items-center justify-around z-10 md:hidden">
       <button
@@ -37,6 +39,19 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
         <SettingsIcon className="h-5 w-5" />
         <span className="text-xs mt-1">Налаштування</span>
       </button>
+      
+      {/* Кнопка мікрофона Джарвіса */}
+      {onMicClick && (
+        <button
+          onClick={onMicClick}
+          className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${
+            isListening ? "text-yellow-400" : "text-neon-green"
+          }`}
+        >
+          <Mic className="h-5 w-5" />
+          <span className="text-xs mt-1">Джарвіс</span>
+        </button>
+      )}
     </div>
   );
 }
