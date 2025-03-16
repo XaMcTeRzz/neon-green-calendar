@@ -130,14 +130,18 @@ const Index = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground pb-16">
-      <div className="container max-w-md mx-auto px-4 py-6 flex items-center justify-center flex-col">
+    <div className="min-h-screen flex flex-col bg-background text-foreground pb-16 relative">
+      <div className="container max-w-md mx-auto px-4 py-6 flex items-center justify-center flex-col relative">
         {showAddForm ? (
-          <AddTaskForm
-            initialDate={selectedDate}
-            onSubmit={handleTaskSubmit}
-            onCancel={() => setShowAddForm(false)}
-          />
+          <div className="form-overlay">
+            <div className="form-container">
+              <AddTaskForm
+                initialDate={selectedDate}
+                onSubmit={handleTaskSubmit}
+                onCancel={() => setShowAddForm(false)}
+              />
+            </div>
+          </div>
         ) : (
           <>
             {activeTab === "calendar" && (

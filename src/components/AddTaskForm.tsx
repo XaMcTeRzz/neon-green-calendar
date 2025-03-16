@@ -87,57 +87,65 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
   // Ініціалізуємо розпізнавання мови
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // @ts-ignore - Ігноруємо помилки типу, оскільки API може не бути повністю типізовано
-      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-      
-      if (SpeechRecognitionAPI) {
-        // @ts-ignore
-        const recognitionInstance = new SpeechRecognitionAPI();
+      try {
+        // @ts-ignore - Ігноруємо помилки типу, оскільки API може не бути повністю типізовано
+        const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
         
-        recognitionInstance.lang = 'uk-UA'; // Українська мова
-        recognitionInstance.continuous = true;
-        recognitionInstance.interimResults = true;
-        
-        recognitionInstance.onresult = (event) => {
+        if (SpeechRecognitionAPI) {
           // @ts-ignore
-          const transcript = Array.from(event.results)
+          const recognitionInstance = new SpeechRecognitionAPI();
+          
+          recognitionInstance.lang = 'uk-UA'; // Українська мова
+          recognitionInstance.continuous = true;
+          recognitionInstance.interimResults = true;
+          
+          recognitionInstance.onresult = (event) => {
             // @ts-ignore
-            .map(result => result[0].transcript)
-            .join(' ');
-            
-          // @ts-ignore
-          if (event.results[0].isFinal) {
-            // Визначаємо, куди додавати текст - в заголовок чи опис
-            if (!title || title.length < 5) {
-              setTitle(transcript);
-            } else {
-              setDescription(prev => prev ? `${prev} ${transcript}` : transcript);
+            const transcript = Array.from(event.results)
+              // @ts-ignore
+              .map(result => result[0].transcript)
+              .join(' ');
+              
+            // @ts-ignore
+            if (event.results[0].isFinal) {
+              // Визначаємо, куди додавати текст - в заголовок чи опис
+              if (!title || title.length < 5) {
+                setTitle(transcript);
+              } else {
+                setDescription(prev => prev ? `${prev} ${transcript}` : transcript);
+              }
             }
-          }
-        };
-        
-        recognitionInstance.onerror = (event) => {
-          console.error('Speech recognition error', event.error);
-          setIsRecording(false);
-          toast({
-            title: "Помилка розпізнавання",
-            description: `Виникла помилка: ${event.error}`,
-            variant: "destructive",
-          });
-        };
-        
-        recognitionInstance.onend = () => {
-          setIsRecording(false);
-        };
-        
-        setRecognition(recognitionInstance);
+          };
+          
+          recognitionInstance.onerror = (event) => {
+            console.error('Speech recognition error', event.error);
+            setIsRecording(false);
+            toast({
+              title: "Помилка розпізнавання",
+              description: `Виникла помилка: ${event.error}`,
+              variant: "destructive",
+            });
+          };
+          
+          recognitionInstance.onend = () => {
+            setIsRecording(false);
+          };
+          
+          setRecognition(recognitionInstance);
+        }
+      } catch (error) {
+        console.error('Error initializing speech recognition:', error);
       }
     }
     
     // Очищення при розмонтуванні компонента
     return () => {
       if (recognition) {
-        recognition.abort();
+        try {
+          recognition.abort();
+        } catch (e) {
+          console.error('Error aborting recognition:', e);
+        }
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -178,7 +186,7 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
     if (!recognition) {
       toast({
         title: "Не підтримується",
-        description: "Ваш браузер не підтримує розпізнавання мови",
+        description: "Ваш браузер не підтримує розпізнавання мови або доступ до мікрофона обмежений",
         variant: "destructive",
       });
       return;
@@ -186,21 +194,38 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
     
     if (isRecording) {
       // Зупиняємо запис
-      recognition.stop();
-      setIsRecording(false);
-      toast({
-        title: "Запис завершено",
-        description: "Текст додано до задачі",
-      });
+      try {
+        recognition.stop();
+        setIsRecording(false);
+        toast({
+          title: "Запис завершено",
+          description: "Текст додано до задачі",
+        });
+      } catch (error) {
+        console.error('Error stopping recognition:', error);
+        setIsRecording(false);
+      }
     } else {
       // Починаємо запис
       try {
-        recognition.start();
-        setIsRecording(true);
-        toast({
-          title: "Запис голосу...",
-          description: "Говоріть чітко. Натисніть кнопку ще раз, щоб зупинити",
-        });
+        // Перевіряємо дозвіл на доступ до мікрофона
+        navigator.mediaDevices.getUserMedia({ audio: true })
+          .then(() => {
+            recognition.start();
+            setIsRecording(true);
+            toast({
+              title: "Запис голосу...",
+              description: "Говоріть чітко. Натисніть кнопку ще раз, щоб зупинити",
+            });
+          })
+          .catch((err) => {
+            console.error('Microphone access denied:', err);
+            toast({
+              title: "Доступ заборонено",
+              description: "Немає доступу до мікрофона. Перевірте налаштування браузера.",
+              variant: "destructive",
+            });
+          });
       } catch (error) {
         console.error('Speech recognition error:', error);
         toast({
