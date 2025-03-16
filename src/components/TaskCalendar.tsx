@@ -60,9 +60,9 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
           className="rounded-md"
           locale={uk}
           classNames={{
-            day_selected: "bg-neon-green text-black hover:bg-neon-green hover:text-black focus:bg-neon-green focus:text-black",
+            day_selected: "bg-gray-200 text-gray-900 hover:bg-gray-300 hover:text-gray-900 focus:bg-gray-300 focus:text-gray-900",
             day_today: "border-2 border-gray-400 text-gray-700 font-bold",
-            day: "hover:bg-neon-green/20 transition-colors duration-200"
+            day: "hover:bg-gray-100 transition-colors duration-200"
           }}
           onDayClick={(day) => {
             // Додатковий ефект при натисканні на день
