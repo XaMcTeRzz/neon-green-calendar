@@ -754,7 +754,7 @@ export function JarvisAssistant({ tasks, selectedDate, onFilterDate, onAddTask }
   };
 
   return (
-    <div className="fixed bottom-28 right-4 z-50 flex flex-col items-end gap-2">
+    <div className="fixed bottom-28 left-4 z-50 flex flex-col items-start gap-2">
       {/* Показуємо діалог налаштувань, якщо showSettings = true */}
       {showSettings && <JarvisSettingsDialog />}
       
@@ -798,7 +798,7 @@ export function JarvisAssistant({ tasks, selectedDate, onFilterDate, onAddTask }
         <Button
           variant="secondary"
           size="icon"
-          className={`h-12 w-12 rounded-full shadow-lg ${isListening ? "bg-yellow-400 text-black" : "bg-primary"}`}
+          className={`h-12 w-12 rounded-full shadow-lg ${isListening ? "bg-yellow-400 text-black" : "bg-neon-green text-black hover:bg-green-400"}`}
           onClick={startListening}
           disabled={isListening}
         >

@@ -11,7 +11,7 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
       <button
         onClick={() => onTabChange("calendar")}
         className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${
-          activeTab === "calendar" ? "text-primary" : "text-muted-foreground"
+          activeTab === "calendar" ? "text-neon-green" : "text-muted-foreground"
         }`}
       >
         <Calendar className="h-5 w-5" />
@@ -21,7 +21,7 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
       <button
         onClick={() => onTabChange("tasks")}
         className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${
-          activeTab === "tasks" ? "text-primary" : "text-muted-foreground"
+          activeTab === "tasks" ? "text-neon-green" : "text-muted-foreground"
         }`}
       >
         <ListTodo className="h-5 w-5" />
@@ -31,7 +31,7 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
       <button
         onClick={() => onTabChange("settings")}
         className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${
-          activeTab === "settings" ? "text-primary" : "text-muted-foreground"
+          activeTab === "settings" ? "text-neon-green" : "text-muted-foreground"
         }`}
       >
         <SettingsIcon className="h-5 w-5" />
