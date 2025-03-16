@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Calendar as CalendarIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { uk } from "date-fns/locale";
 
 interface TaskCalendarProps {
@@ -16,7 +17,7 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
   const [date, setDate] = useState<Date>(selectedDate);
   const [isHovering, setIsHovering] = useState(false);
 
-  const handleSelect = (newDate: Date | undefined) => {
+  const handleSelect = (newDate: Date | null) => {
     if (newDate) {
       setDate(newDate);
       onDateSelect(newDate);
@@ -34,6 +35,58 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
       description: `Створення нової задачі на ${date.toLocaleDateString('uk')}`,
     });
   };
+
+  // Кастомні стилі для календаря
+  const calendarStyles = `
+    .react-datepicker {
+      font-family: 'Inter', sans-serif;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0.5rem;
+      background-color: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 15px rgba(57, 255, 20, 0.3);
+    }
+    .react-datepicker__header {
+      background-color: transparent;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 0.8rem;
+    }
+    .react-datepicker__current-month {
+      color: rgba(57, 255, 20, 0.9);
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .react-datepicker__day-name {
+      color: rgba(255, 255, 255, 0.7);
+      margin: 0.4rem;
+    }
+    .react-datepicker__day {
+      margin: 0.4rem;
+      color: rgba(255, 255, 255, 0.9);
+      border-radius: 0.3rem;
+      transition: all 0.2s ease;
+    }
+    .react-datepicker__day:hover {
+      background-color: rgba(57, 255, 20, 0.2);
+    }
+    .react-datepicker__day--selected {
+      background-color: rgba(57, 255, 20, 0.3);
+      color: white;
+    }
+    .react-datepicker__day--today {
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      font-weight: bold;
+    }
+    .react-datepicker__navigation {
+      top: 1rem;
+    }
+    .react-datepicker__navigation-icon::before {
+      border-color: rgba(57, 255, 20, 0.7);
+    }
+    .react-datepicker__navigation:hover *::before {
+      border-color: rgba(57, 255, 20, 1);
+    }
+  `;
 
   return (
     <Card className="glass-card overflow-hidden w-full max-w-sm animate-float shadow-[0_0_15px_rgba(57,255,20,0.5)] hover:shadow-[0_0_25px_rgba(57,255,20,0.7)]">
@@ -53,31 +106,19 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
             <Plus className={`h-6 w-6 ${isHovering ? 'animate-spin-slow' : ''}`} />
           </button>
         </div>
-        <Calendar
-          mode="single"
+        
+        <style>{calendarStyles}</style>
+        
+        <DatePicker
           selected={date}
-          onSelect={handleSelect}
-          className="rounded-md"
+          onChange={handleSelect}
+          inline
           locale={uk}
-          classNames={{
-            day_selected: "bg-gray-200 text-gray-900 hover:bg-gray-300 hover:text-gray-900 focus:bg-gray-300 focus:text-gray-900 focus:outline-none",
-            day_today: "border-2 border-gray-400 text-gray-700 font-bold",
-            day: "hover:bg-gray-100 transition-colors duration-200 focus:outline-none",
-            cell: "p-1",
-            table: "border-separate border-spacing-1",
-            head_cell: "text-gray-500 font-normal text-[0.8rem] p-1",
-            nav_button: "hover:bg-gray-100",
-            nav: "space-x-1 flex items-center",
-            caption: "flex justify-center pt-1 relative items-center",
-            root: "bg-transparent rounded-md border border-gray-200"
-          }}
-          onDayClick={(day) => {
-            // Додатковий ефект при натисканні на день
-            const element = document.activeElement as HTMLElement;
-            if (element) {
-              element.blur();
-            }
-          }}
+          calendarClassName="w-full"
+          dayClassName={date => 
+            "hover:bg-opacity-20 hover:bg-neon-green"
+          }
+          formatWeekDay={nameOfDay => nameOfDay.substring(0, 3)}
         />
       </CardContent>
     </Card>
