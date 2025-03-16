@@ -74,8 +74,8 @@ export function TasksList({ tasks, date, onTaskComplete, onTaskDelete, onEditTas
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-primary capitalize">{formattedDate}</h2>
-        <span className="text-xs px-2 py-1 rounded-full bg-primary/20 text-primary">
+        <h2 className="text-xl font-semibold text-neon-green animate-neon-glow capitalize">{formattedDate}</h2>
+        <span className="text-xs px-2 py-1 rounded-full bg-primary/20 text-neon-green">
           {filteredTasks.length} задач
         </span>
       </div>

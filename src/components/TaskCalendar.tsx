@@ -49,7 +49,7 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
           >
-            <Plus className={`h-6 w-6 ${isHovering ? 'animate-spin-slow' : ''}`} />
+            <Plus className={`h-6 w-6 ${isHovering ? 'animate-spin-slow' : 'text-neon-green animate-neon-glow'}`} />
           </button>
         </div>
         <Calendar

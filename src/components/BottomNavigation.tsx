@@ -45,10 +45,10 @@ export function BottomNavigation({ activeTab, onTabChange, onMicClick, isListeni
         <button
           onClick={onMicClick}
           className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${
-            isListening ? "text-yellow-400" : "text-neon-green"
+            isListening ? "text-yellow-400" : "text-neon-green animate-pulse-fast"
           }`}
         >
-          <Mic className="h-5 w-5" />
+          <Mic className={`h-5 w-5 ${!isListening && "animate-pulse-fast"}`} />
           <span className="text-xs mt-1">Джарвіс</span>
         </button>
       )}
