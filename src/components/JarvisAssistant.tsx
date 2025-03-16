@@ -754,7 +754,7 @@ export function JarvisAssistant({ tasks, selectedDate, onFilterDate, onAddTask }
   };
 
   return (
-    <div className="fixed bottom-28 left-4 z-50 flex flex-col items-start gap-2">
+    <div className="fixed bottom-28 right-1 z-50 flex flex-col items-end gap-2">
       {/* Показуємо діалог налаштувань, якщо showSettings = true */}
       {showSettings && <JarvisSettingsDialog />}
       
