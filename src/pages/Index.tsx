@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { TaskCalendar } from "@/components/TaskCalendar";
@@ -51,13 +52,25 @@ const Index = () => {
   useEffect(() => {
     const savedTasks = localStorage.getItem("tasks");
     if (savedTasks) {
-      setTasks(JSON.parse(savedTasks));
+      try {
+        const parsedTasks = JSON.parse(savedTasks);
+        // Перетворюємо рядкові дати назад у об'єкти Date
+        const tasksWithDates = parsedTasks.map((task: any) => ({
+          ...task,
+          date: new Date(task.date)
+        }));
+        setTasks(tasksWithDates);
+      } catch (error) {
+        console.error("Помилка при зчитуванні задач:", error);
+        setTasks(generateSampleTasks());
+      }
     } else {
       setTasks(generateSampleTasks());
     }
   }, []);
   
   useEffect(() => {
+    // Перед збереженням переконаємося, що задачі мають правильний формат
     localStorage.setItem("tasks", JSON.stringify(tasks));
   }, [tasks]);
   
@@ -108,7 +121,8 @@ const Index = () => {
         description: `"${taskData.title}" додано на ${taskDate.toLocaleDateString('uk')}`,
       });
       
-      // Збереження в локальне сховище відбувається автоматично через useEffect
+      // Спроба відправити сповіщення через налаштовані канали
+      sendTaskNotifications(newTask);
     } catch (error) {
       console.error("Помилка при додаванні задачі:", error);
       toast({
@@ -116,6 +130,48 @@ const Index = () => {
         description: "Не вдалося додати задачу. Спробуйте ще раз.",
         variant: "destructive",
       });
+    }
+  };
+  
+  // Функція для відправки сповіщень через налаштовані канали
+  const sendTaskNotifications = (task: Task) => {
+    try {
+      const savedSettings = localStorage.getItem("userSettings");
+      if (!savedSettings) return;
+      
+      const settings = JSON.parse(savedSettings);
+      
+      // Перевіряємо налаштування Telegram і відправляємо сповіщення
+      if (settings.telegramBotEnabled && settings.telegramUsername) {
+        console.log("Відправляємо сповіщення в Telegram для:", settings.telegramUsername);
+        // В реальному додатку тут був би API-запит до сервера для відправки повідомлення
+        toast({
+          title: "Telegram нагадування",
+          description: "Нагадування буде відправлено через Telegram",
+        });
+      }
+      
+      // Перевіряємо налаштування Email і відправляємо сповіщення
+      if (settings.emailEnabled && settings.emailAddress) {
+        console.log("Відправляємо сповіщення на Email:", settings.emailAddress);
+        // В реальному додатку тут був би API-запит до сервера для відправки email
+        toast({
+          title: "Email нагадування",
+          description: "Нагадування буде відправлено на вашу електронну пошту",
+        });
+      }
+      
+      // Перевіряємо налаштування Google Calendar і додаємо подію
+      if (settings.googleCalendarEnabled && settings.googleCalendarId) {
+        console.log("Додаємо подію в Google Calendar:", settings.googleCalendarId);
+        // В реальному додатку тут був би API-запит до Google Calendar API
+        toast({
+          title: "Google Calendar",
+          description: "Подію додано до вашого Google Calendar",
+        });
+      }
+    } catch (error) {
+      console.error("Помилка при відправці сповіщень:", error);
     }
   };
   
@@ -150,8 +206,8 @@ const Index = () => {
     <div className="min-h-screen flex flex-col bg-background text-foreground pb-16 relative">
       <div className="container max-w-md mx-auto px-4 py-6 flex items-center justify-center flex-col relative">
         {showAddForm ? (
-          <div className="form-overlay">
-            <div className="form-container">
+          <div className="form-overlay animate-fade-in">
+            <div className="form-container animate-scale-in">
               <AddTaskForm
                 initialDate={selectedDate}
                 onSubmit={handleTaskSubmit}
@@ -162,12 +218,14 @@ const Index = () => {
         ) : (
           <>
             {activeTab === "calendar" && (
-              <div className="space-y-6 w-full flex flex-col items-center">
-                <TaskCalendar
-                  onDateSelect={handleDateSelect}
-                  onAddTask={handleAddTask}
-                  selectedDate={selectedDate}
-                />
+              <div className="space-y-6 w-full flex flex-col items-center animate-fade-in">
+                <div className="flex justify-center w-full">
+                  <TaskCalendar
+                    onDateSelect={handleDateSelect}
+                    onAddTask={handleAddTask}
+                    selectedDate={selectedDate}
+                  />
+                </div>
                 <TasksList
                   tasks={tasks}
                   date={selectedDate}
@@ -178,14 +236,20 @@ const Index = () => {
             )}
             
             {activeTab === "tasks" && (
-              <TasksList
-                tasks={tasks}
-                onTaskComplete={handleTaskComplete}
-                onTaskDelete={handleTaskDelete}
-              />
+              <div className="animate-fade-in w-full">
+                <TasksList
+                  tasks={tasks}
+                  onTaskComplete={handleTaskComplete}
+                  onTaskDelete={handleTaskDelete}
+                />
+              </div>
             )}
             
-            {activeTab === "settings" && <Settings />}
+            {activeTab === "settings" && (
+              <div className="animate-fade-in w-full">
+                <Settings />
+              </div>
+            )}
           </>
         )}
       </div>

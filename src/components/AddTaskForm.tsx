@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { X, Calendar as CalendarIcon, Clock, Tag } from "lucide-react";
+
+import React, { useState, useEffect } from "react";
+import { X, Calendar as CalendarIcon, Clock, Tag, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -45,6 +46,88 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
   // Стан валідації та відправки
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Стан голосового введення
+  const [isListening, setIsListening] = useState(false);
+  const [activeField, setActiveField] = useState<"title" | "description" | null>(null);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+
+  // Ініціалізація SpeechRecognition при першому рендері
+  useEffect(() => {
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      recognitionInstance.continuous = true;
+      recognitionInstance.interimResults = true;
+      recognitionInstance.lang = 'uk-UA'; // Встановлюємо українську мову
+
+      recognitionInstance.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0])
+          .map(result => result.transcript)
+          .join('');
+
+        if (activeField) {
+          setFormData(prev => ({ 
+            ...prev, 
+            [activeField]: transcript 
+          }));
+        }
+      };
+
+      recognitionInstance.onerror = (event) => {
+        console.error('Помилка розпізнавання мови:', event.error);
+        setIsListening(false);
+        toast({
+          title: "Помилка голосового введення",
+          description: `Не вдалося розпізнати голос: ${event.error}`,
+          variant: "destructive",
+        });
+      };
+
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+      };
+
+      setRecognition(recognitionInstance);
+    }
+    
+    return () => {
+      if (recognition) {
+        recognition.stop();
+      }
+    };
+  }, []);
+
+  // Функція для запуску/зупинки голосового введення
+  const toggleSpeechRecognition = (field: "title" | "description") => {
+    if (!recognition) {
+      toast({
+        title: "Не підтримується",
+        description: "Ваш браузер не підтримує голосове введення",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isListening && activeField === field) {
+      recognition.stop();
+      setIsListening(false);
+      setActiveField(null);
+    } else {
+      if (isListening) {
+        recognition.stop();
+      }
+      setActiveField(field);
+      setIsListening(true);
+      recognition.start();
+      
+      toast({
+        title: "Голосове введення активовано",
+        description: `Диктуйте ${field === "title" ? "назву" : "опис"} задачі`,
+      });
+    }
+  };
 
   // Обробники зміни полів
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -90,6 +173,13 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
   // Обробник відправки форми
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Зупиняємо голосове введення при відправці форми
+    if (isListening && recognition) {
+      recognition.stop();
+      setIsListening(false);
+      setActiveField(null);
+    }
     
     // Валідація перед відправкою
     if (!validateForm()) {
@@ -150,16 +240,31 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
       <div className="space-y-4">
         {/* Назва задачі */}
         <div>
-          <label htmlFor="title" className="block text-sm font-medium mb-1">
-            Назва задачі *
-          </label>
+          <div className="flex justify-between items-center mb-1">
+            <label htmlFor="title" className="block text-sm font-medium">
+              Назва задачі *
+            </label>
+            <Button
+              type="button"
+              variant={isListening && activeField === "title" ? "default" : "outline"}
+              size="icon"
+              className={`h-6 w-6 rounded-full ${isListening && activeField === "title" ? "bg-neon-green text-black animate-pulse-neon" : ""}`}
+              onClick={() => toggleSpeechRecognition("title")}
+            >
+              {isListening && activeField === "title" ? (
+                <MicOff className="h-3 w-3" />
+              ) : (
+                <Mic className="h-3 w-3" />
+              )}
+            </Button>
+          </div>
           <Input
             id="title"
             name="title"
             placeholder="Введіть назву задачі"
             value={formData.title}
             onChange={handleInputChange}
-            className="glass-card border-neon-green/50 focus-visible:ring-neon-green"
+            className={`glass-card border-neon-green/50 focus-visible:ring-neon-green ${isListening && activeField === "title" ? "border-neon-green animate-pulse-neon" : ""}`}
             aria-invalid={!!errors.title}
           />
           {errors.title && (
@@ -169,16 +274,31 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
 
         {/* Опис задачі */}
         <div>
-          <label htmlFor="description" className="block text-sm font-medium mb-1">
-            Опис (необов'язково)
-          </label>
+          <div className="flex justify-between items-center mb-1">
+            <label htmlFor="description" className="block text-sm font-medium">
+              Опис (необов'язково)
+            </label>
+            <Button
+              type="button"
+              variant={isListening && activeField === "description" ? "default" : "outline"}
+              size="icon"
+              className={`h-6 w-6 rounded-full ${isListening && activeField === "description" ? "bg-neon-green text-black animate-pulse-neon" : ""}`}
+              onClick={() => toggleSpeechRecognition("description")}
+            >
+              {isListening && activeField === "description" ? (
+                <MicOff className="h-3 w-3" />
+              ) : (
+                <Mic className="h-3 w-3" />
+              )}
+            </Button>
+          </div>
           <Textarea
             id="description"
             name="description"
             placeholder="Додайте опис задачі"
             value={formData.description}
             onChange={handleInputChange}
-            className="min-h-[100px] glass-card border-neon-green/50 focus-visible:ring-neon-green"
+            className={`min-h-[100px] glass-card border-neon-green/50 focus-visible:ring-neon-green ${isListening && activeField === "description" ? "border-neon-green animate-pulse-neon" : ""}`}
           />
         </div>
         
