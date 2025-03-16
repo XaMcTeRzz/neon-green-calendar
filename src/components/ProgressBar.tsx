@@ -11,7 +11,7 @@ export function ProgressBar({ completed, total }: ProgressBarProps) {
   return (
     <div className="space-y-1">
       <div className="flex justify-between items-center text-xs text-muted-foreground">
-        <span>Прогрес</span>
+        <span>{completed} з {total}</span>
         <span>{percentage}%</span>
       </div>
       <div className="h-2 bg-muted rounded-full overflow-hidden">
