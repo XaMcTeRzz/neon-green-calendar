@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TaskCard } from "@/components/TaskCard";
 import { ProgressBar } from "@/components/ProgressBar";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,10 @@ export function TasksList({ tasks, date, onTaskComplete, onTaskDelete }: TasksLi
   const [completedTasks, setCompletedTasks] = useState(
     tasks.filter(task => task.completed).length
   );
+  
+  useEffect(() => {
+    setCompletedTasks(tasks.filter(task => task.completed).length);
+  }, [tasks]);
   
   const dateFilteredTasks = date 
     ? tasks.filter(task => 

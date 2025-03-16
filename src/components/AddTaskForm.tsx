@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mic, X, Calendar as CalendarIcon, Clock, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,49 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Декларація типів для SpeechRecognition API
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+  error: any;
+}
+
+interface SpeechRecognitionResultList {
+  [index: number]: SpeechRecognitionResult;
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  [index: number]: SpeechRecognitionAlternative;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  isFinal: boolean;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: SpeechRecognitionEvent) => void;
+  onend: () => void;
+}
+
+interface Window {
+  SpeechRecognition?: new () => SpeechRecognition;
+  webkitSpeechRecognition?: new () => SpeechRecognition;
+}
+
+// Інтерфейс для Props
 interface AddTaskFormProps {
   initialDate: Date;
   onSubmit: (task: {
@@ -39,6 +82,66 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
   const [category, setCategory] = useState<string>("");
   const [isRecording, setIsRecording] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+
+  // Ініціалізуємо розпізнавання мови
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // @ts-ignore - Ігноруємо помилки типу, оскільки API може не бути повністю типізовано
+      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+      
+      if (SpeechRecognitionAPI) {
+        // @ts-ignore
+        const recognitionInstance = new SpeechRecognitionAPI();
+        
+        recognitionInstance.lang = 'uk-UA'; // Українська мова
+        recognitionInstance.continuous = true;
+        recognitionInstance.interimResults = true;
+        
+        recognitionInstance.onresult = (event) => {
+          // @ts-ignore
+          const transcript = Array.from(event.results)
+            // @ts-ignore
+            .map(result => result[0].transcript)
+            .join(' ');
+            
+          // @ts-ignore
+          if (event.results[0].isFinal) {
+            // Визначаємо, куди додавати текст - в заголовок чи опис
+            if (!title || title.length < 5) {
+              setTitle(transcript);
+            } else {
+              setDescription(prev => prev ? `${prev} ${transcript}` : transcript);
+            }
+          }
+        };
+        
+        recognitionInstance.onerror = (event) => {
+          console.error('Speech recognition error', event.error);
+          setIsRecording(false);
+          toast({
+            title: "Помилка розпізнавання",
+            description: `Виникла помилка: ${event.error}`,
+            variant: "destructive",
+          });
+        };
+        
+        recognitionInstance.onend = () => {
+          setIsRecording(false);
+        };
+        
+        setRecognition(recognitionInstance);
+      }
+    }
+    
+    // Очищення при розмонтуванні компонента
+    return () => {
+      if (recognition) {
+        recognition.abort();
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +156,7 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
 
     setIsSubmitting(true);
     
-    // Simulate saving
+    // Зберігаємо задачу
     setTimeout(() => {
       onSubmit({
         title,
@@ -72,19 +175,41 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
   };
 
   const handleVoiceInput = () => {
-    // In a real app, this would use the Web Speech API
-    setIsRecording(true);
-    toast({
-      title: "Запис голосу...",
-      description: "Говоріть чітко. Натисніть ще раз, щоб зупинити",
-    });
+    if (!recognition) {
+      toast({
+        title: "Не підтримується",
+        description: "Ваш браузер не підтримує розпізнавання мови",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    // Simulate voice recording
-    setTimeout(() => {
-      setTitle(title + "Нова голосова задача");
-      setDescription(description + "Це текст, записаний за допомогою голосового введення.");
+    if (isRecording) {
+      // Зупиняємо запис
+      recognition.stop();
       setIsRecording(false);
-    }, 2000);
+      toast({
+        title: "Запис завершено",
+        description: "Текст додано до задачі",
+      });
+    } else {
+      // Починаємо запис
+      try {
+        recognition.start();
+        setIsRecording(true);
+        toast({
+          title: "Запис голосу...",
+          description: "Говоріть чітко. Натисніть кнопку ще раз, щоб зупинити",
+        });
+      } catch (error) {
+        console.error('Speech recognition error:', error);
+        toast({
+          title: "Помилка",
+          description: "Не вдалося запустити розпізнавання голосу",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   return (
