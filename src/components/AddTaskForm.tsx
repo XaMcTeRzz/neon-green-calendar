@@ -367,7 +367,7 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Без категорії</SelectItem>
+              <SelectItem value="none">Без категорії</SelectItem>
               <SelectItem value="work">Робота</SelectItem>
               <SelectItem value="personal">Особисте</SelectItem>
               <SelectItem value="health">Здоров'я</SelectItem>
