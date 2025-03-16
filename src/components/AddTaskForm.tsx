@@ -120,7 +120,7 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-full">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-primary">Нова задача</h2>
+        <h2 className="text-xl font-semibold text-neon-green animate-neon-glow">Нова задача</h2>
         <div className="flex items-center gap-2">
           <Button 
             type="button" 
