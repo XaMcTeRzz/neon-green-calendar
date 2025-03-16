@@ -80,26 +80,42 @@ const Index = () => {
     time: string;
     category?: string;
   }) => {
-    const [hours, minutes] = taskData.time.split(':').map(Number);
-    const date = new Date(taskData.date);
-    date.setHours(hours, minutes, 0);
-    
-    const newTask: Task = {
-      id: `task-${Date.now()}`,
-      title: taskData.title,
-      description: taskData.description,
-      date,
-      completed: false,
-      category: taskData.category,
-    };
-    
-    setTasks([...tasks, newTask]);
-    setShowAddForm(false);
-    
-    toast({
-      title: "Задачу додано",
-      description: `${taskData.title} додано на ${date.toLocaleDateString('uk')}`,
-    });
+    try {
+      console.log("Отримано дані форми:", taskData);
+      
+      const [hours, minutes] = taskData.time.split(':').map(Number);
+      const date = new Date(taskData.date);
+      date.setHours(hours, minutes, 0);
+      
+      const newTask: Task = {
+        id: `task-${Date.now()}`,
+        title: taskData.title,
+        description: taskData.description,
+        date,
+        completed: false,
+        category: taskData.category,
+      };
+      
+      console.log("Створено нову задачу:", newTask);
+      
+      // Оновлюємо стан з новою задачею
+      setTasks(prevTasks => [...prevTasks, newTask]);
+      
+      // Закриваємо форму додавання
+      setShowAddForm(false);
+      
+      toast({
+        title: "Задачу додано",
+        description: `${taskData.title} додано на ${date.toLocaleDateString('uk')}`,
+      });
+    } catch (error) {
+      console.error("Помилка при додаванні задачі:", error);
+      toast({
+        title: "Помилка додавання",
+        description: "Не вдалося додати задачу. Спробуйте ще раз.",
+        variant: "destructive",
+      });
+    }
   };
   
   const handleTaskComplete = (id: string) => {

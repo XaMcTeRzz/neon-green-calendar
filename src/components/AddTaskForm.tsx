@@ -153,6 +153,8 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Спроба відправити форму", { title, description, date, time, category });
+    
     if (!title.trim()) {
       toast({
         title: "Необхідно вказати назву задачі",
@@ -164,8 +166,8 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
 
     setIsSubmitting(true);
     
-    // Зберігаємо задачу
-    setTimeout(() => {
+    try {
+      // Зберігаємо задачу
       onSubmit({
         title,
         description: description || undefined,
@@ -174,12 +176,20 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
         category: category || undefined,
       });
       
-      setIsSubmitting(false);
       toast({
         title: "Задачу збережено!",
         description: "Нову задачу було успішно додано до календаря",
       });
-    }, 500);
+    } catch (error) {
+      console.error("Помилка при збереженні задачі:", error);
+      toast({
+        title: "Помилка збереження",
+        description: "Не вдалося зберегти задачу. Спробуйте ще раз.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleVoiceInput = () => {

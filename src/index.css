@@ -93,11 +93,11 @@
   }
   
   .form-overlay {
-    @apply fixed inset-0 bg-background/90 backdrop-blur-md z-50 flex items-center justify-center p-4;
+    @apply fixed inset-0 bg-background/95 backdrop-blur-lg z-[100] flex items-center justify-center p-4;
   }
   
   .form-container {
-    @apply w-full max-w-md glass-card p-6 rounded-xl border border-neon-green/20 shadow-[0_0_25px_rgba(57,255,20,0.3)];
+    @apply w-full max-w-md glass-card p-6 rounded-xl border border-neon-green/30 shadow-[0_0_35px_rgba(57,255,20,0.4)];
   }
 }
 
