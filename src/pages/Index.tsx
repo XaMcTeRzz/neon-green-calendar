@@ -81,33 +81,34 @@ const Index = () => {
     category?: string;
   }) => {
     try {
-      console.log("Отримано дані форми:", taskData);
-      
+      // Створення об'єкта дати з годиною та хвилинами
       const [hours, minutes] = taskData.time.split(':').map(Number);
-      const date = new Date(taskData.date);
-      date.setHours(hours, minutes, 0);
+      const taskDate = new Date(taskData.date);
+      taskDate.setHours(hours, minutes, 0);
       
+      // Створення об'єкта задачі
       const newTask: Task = {
-        id: `task-${Date.now()}`,
+        id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         title: taskData.title,
         description: taskData.description,
-        date,
+        date: taskDate,
         completed: false,
         category: taskData.category,
       };
       
-      console.log("Створено нову задачу:", newTask);
-      
-      // Оновлюємо стан з новою задачею
+      // Додавання задачі до списку
       setTasks(prevTasks => [...prevTasks, newTask]);
       
-      // Закриваємо форму додавання
+      // Закриття форми
       setShowAddForm(false);
       
+      // Сповіщення користувача
       toast({
         title: "Задачу додано",
-        description: `${taskData.title} додано на ${date.toLocaleDateString('uk')}`,
+        description: `"${taskData.title}" додано на ${taskDate.toLocaleDateString('uk')}`,
       });
+      
+      // Збереження в локальне сховище відбувається автоматично через useEffect
     } catch (error) {
       console.error("Помилка при додаванні задачі:", error);
       toast({
