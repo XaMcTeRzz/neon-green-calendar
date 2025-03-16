@@ -26,6 +26,17 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
   // Правильні назви днів тижня
   const daysOfWeek = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
+  // Функція для правильного відмінювання слова "задача"
+  const getTaskWord = (count: number): string => {
+    if (count % 10 === 1 && count % 100 !== 11) {
+      return 'задача';
+    } else if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)) {
+      return 'задачі';
+    } else {
+      return 'задач';
+    }
+  };
+
   const handleSelect = (newDate: Date | null) => {
     if (newDate) {
       setDate(newDate);
@@ -53,9 +64,13 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
     const year = date.getFullYear();
     const formattedDate = `${day} ${month} ${year}`;
     
+    // Отримуємо випадкову кількість задач для демонстрації правильних відмінків
+    const taskCount = Math.floor(Math.random() * 10) + 1;
+    const taskWord = getTaskWord(taskCount);
+    
     toast({
       title: "Додавання задачі",
-      description: `Створення нової задачі на ${formattedDate}`,
+      description: `Створення нової задачі на ${formattedDate}. У вас ${taskCount} ${taskWord}.`,
     });
   };
 
@@ -87,6 +102,7 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
       margin: 0.4rem;
       text-align: center;
       width: 2rem;
+      font-size: 0.85rem;
     }
     .react-datepicker__day {
       margin: 0.4rem;
@@ -97,6 +113,7 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
       width: 2rem;
       height: 2rem;
       line-height: 2rem;
+      font-size: 0.9rem;
     }
     .react-datepicker__day:hover {
       background-color: rgba(57, 255, 20, 0.2);
@@ -137,7 +154,7 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
 
   return (
     <Card className="glass-card overflow-hidden w-full max-w-sm animate-float shadow-[0_0_15px_rgba(57,255,20,0.5)] hover:shadow-[0_0_25px_rgba(57,255,20,0.7)]">
-      <CardContent className="p-3">
+      <CardContent className="p-3 text-center">
         <div className="mb-2 flex justify-between items-center">
           <div className="flex items-center">
             <CalendarIcon className="h-5 w-5 mr-2 text-primary animate-glow" />
@@ -161,7 +178,7 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
           onChange={handleSelect}
           inline
           locale={uk}
-          calendarClassName="w-full text-center"
+          calendarClassName="w-full text-center mx-auto"
           dayClassName={date => 
             "hover:bg-opacity-20 hover:bg-neon-green"
           }
