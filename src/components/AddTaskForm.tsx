@@ -54,9 +54,11 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
 
   // Ініціалізація SpeechRecognition при першому рендері
   useEffect(() => {
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognitionInstance = new SpeechRecognition();
+    // Перевірка підтримки API розпізнавання мови у браузері
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (SpeechRecognitionAPI) {
+      const recognitionInstance = new SpeechRecognitionAPI();
       recognitionInstance.continuous = true;
       recognitionInstance.interimResults = true;
       recognitionInstance.lang = 'uk-UA'; // Встановлюємо українську мову
