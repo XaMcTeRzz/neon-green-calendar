@@ -62,7 +62,14 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
           classNames={{
             day_selected: "bg-gray-200 text-gray-900 hover:bg-gray-300 hover:text-gray-900 focus:bg-gray-300 focus:text-gray-900 focus:outline-none",
             day_today: "border-2 border-gray-400 text-gray-700 font-bold",
-            day: "hover:bg-gray-100 transition-colors duration-200 focus:outline-none"
+            day: "hover:bg-gray-100 transition-colors duration-200 focus:outline-none",
+            cell: "p-0",
+            table: "border-collapse",
+            head_cell: "text-gray-500 font-normal text-[0.8rem]",
+            nav_button: "border-0 hover:bg-transparent",
+            nav: "space-x-1 flex items-center",
+            caption: "flex justify-center pt-1 relative items-center",
+            root: "bg-transparent"
           }}
           onDayClick={(day) => {
             // Додатковий ефект при натисканні на день
