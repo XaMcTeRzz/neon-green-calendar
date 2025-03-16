@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { X, Calendar as CalendarIcon, Clock, Tag, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -367,7 +366,7 @@ export function AddTaskForm({ initialDate, onSubmit, onCancel }: AddTaskFormProp
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Без категорії</SelectItem>
+              <SelectItem value="">Без категорії</SelectItem>
               <SelectItem value="work">Робота</SelectItem>
               <SelectItem value="personal">Особисте</SelectItem>
               <SelectItem value="health">Здоров'я</SelectItem>
