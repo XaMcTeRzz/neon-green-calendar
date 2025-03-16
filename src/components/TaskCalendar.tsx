@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Calendar as CalendarIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { uk } from "date-fns/locale";
 
 interface TaskCalendarProps {
   onDateSelect: (date: Date) => void;
@@ -57,9 +58,10 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
           selected={date}
           onSelect={handleSelect}
           className="rounded-md"
+          locale={uk}
           classNames={{
             day_selected: "bg-neon-green text-black hover:bg-neon-green hover:text-black focus:bg-neon-green focus:text-black",
-            day_today: "bg-accent/10 text-accent",
+            day_today: "border-2 border-neon-green text-neon-green font-bold",
             day: "hover:bg-neon-green/20 transition-colors duration-200"
           }}
           onDayClick={(day) => {
