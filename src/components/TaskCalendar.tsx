@@ -40,7 +40,7 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
         <div className="mb-2 flex justify-between items-center">
           <div className="flex items-center">
             <CalendarIcon className="h-5 w-5 mr-2 text-primary animate-glow" />
-            <h2 className="text-lg font-semibold text-primary">Календар</h2>
+            <h2 className="text-lg font-semibold text-neon-green animate-neon-glow">Календар</h2>
           </div>
           <button
             onClick={handleAddTask}
@@ -49,7 +49,7 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
           >
-            <Plus className={`h-6 w-6 ${isHovering ? 'animate-spin-slow' : 'text-neon-green animate-neon-glow'}`} />
+            <Plus className={`h-6 w-6 ${isHovering ? 'animate-spin-slow' : ''}`} />
           </button>
         </div>
         <Calendar
