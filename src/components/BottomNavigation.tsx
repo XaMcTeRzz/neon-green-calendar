@@ -30,16 +30,6 @@ export function BottomNavigation({ activeTab, onTabChange, onMicClick, isListeni
         <span className="text-xs mt-1">Задачі</span>
       </button>
       
-      <button
-        onClick={() => onTabChange("settings")}
-        className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${
-          activeTab === "settings" ? "text-neon-green animate-neon-glow" : "text-muted-foreground"
-        }`}
-      >
-        <SettingsIcon className="h-5 w-5" />
-        <span className="text-xs mt-1">Налаштування</span>
-      </button>
-      
       {/* Кнопка мікрофона Джарвіса */}
       {onMicClick && (
         <button
@@ -52,6 +42,16 @@ export function BottomNavigation({ activeTab, onTabChange, onMicClick, isListeni
           <span className="text-xs mt-1">Джарвіс</span>
         </button>
       )}
+      
+      <button
+        onClick={() => onTabChange("settings")}
+        className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${
+          activeTab === "settings" ? "text-neon-green animate-neon-glow" : "text-muted-foreground"
+        }`}
+      >
+        <SettingsIcon className="h-5 w-5" />
+        <span className="text-xs mt-1">Налаштування</span>
+      </button>
     </div>
   );
 }

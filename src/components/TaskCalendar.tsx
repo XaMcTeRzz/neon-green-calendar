@@ -153,7 +153,7 @@ export function TaskCalendar({ onDateSelect, onAddTask, selectedDate }: TaskCale
   };
 
   return (
-    <Card className="glass-card overflow-hidden w-full max-w-sm animate-float shadow-[0_0_15px_rgba(57,255,20,0.5)] hover:shadow-[0_0_25px_rgba(57,255,20,0.7)]">
+    <Card className="glass-card overflow-hidden w-full max-w-sm animate-float shadow-[0_0_15px_rgba(57,255,20,0.5)] hover:shadow-[0_0_25px_rgba(57,255,20,0.7)] transform origin-top" style={{ transform: 'scale(0.7)', transformOrigin: 'top center' }}>
       <CardContent className="p-3 text-center">
         <div className="mb-2 flex justify-between items-center">
           <div className="flex items-center">

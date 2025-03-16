@@ -272,7 +272,7 @@ const Index = () => {
           <>
             {activeTab === "calendar" && (
               <div className="space-y-6 w-full flex flex-col items-center animate-fade-in">
-                <div className="flex justify-center w-full">
+                <div className="flex justify-center w-full md:w-1/3 mx-auto">
                   <TaskCalendar
                     onDateSelect={handleDateSelect}
                     onAddTask={handleAddTask}
