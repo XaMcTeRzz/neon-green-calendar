@@ -27,7 +27,7 @@ export function BottomNavigation({ activeTab, onTabChange, onMicClick, isListeni
         }`}
       >
         <ListTodo className="h-5 w-5" />
-        <span className="text-xs mt-1">Задачі та примітки</span>
+        <span className="text-xs mt-1">Задача/Примітка</span>
       </button>
       
       <button

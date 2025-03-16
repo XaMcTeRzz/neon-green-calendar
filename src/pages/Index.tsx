@@ -211,7 +211,7 @@ const Index = () => {
     setActiveTab(tab);
     if (tab === "tasks") {
       toast({
-        title: "Мої задачі та примітки",
+        title: "Задача/Примітка",
         description: "Всі ваші заплановані задачі",
       });
     } else if (tab === "settings") {
