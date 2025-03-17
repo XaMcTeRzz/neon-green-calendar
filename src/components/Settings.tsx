@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -913,4 +914,84 @@ export function Settings() {
                   name="googleCalendarId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ID Google Calendar
+                      <FormLabel>ID Google Calendar</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="example@gmail.com" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Знайдіть ID календаря в налаштуваннях Google Calendar
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Reminder Settings */}
+          <div className="glass-card p-4 rounded-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <h3 className="text-base font-medium">Нагадування</h3>
+                <p className="text-sm text-muted-foreground">Налаштування нагадувань про задачі</p>
+              </div>
+              <FormField
+                control={form.control}
+                name="reminderEnabled"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Switch 
+                        checked={field.value} 
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {form.watch("reminderEnabled") && (
+              <div className="space-y-4 pt-2 border-t border-border/50">
+                <FormField
+                  control={form.control}
+                  name="defaultReminderTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Час нагадування за замовчуванням (хвилин)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          placeholder="30" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Скільки хвилин до початку задачі надсилати нагадування
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+          </div>
+
+          <Button type="submit" disabled={isSaving} className="w-full">
+            {isSaving ? (
+              <>Збереження...</>
+            ) : (
+              <>
+                <SaveIcon className="mr-2 h-4 w-4" />
+                Зберегти налаштування
+              </>
+            )}
+          </Button>
+        </form>
+      </Form>
+    </div>
+  );
+}
