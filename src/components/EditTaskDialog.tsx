@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -27,8 +28,9 @@ export function EditTaskDialog({ task, onClose, onEdit }: EditTaskDialogProps) {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || "");
   const [category, setCategory] = useState(task.category || "");
-  const [date, setDate] = useState<Date>(new Date(task.date));
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date(task.date));
   const [time, setTime] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   
   // Ініціалізація часу при завантаженні компонента
   useEffect(() => {
@@ -39,20 +41,20 @@ export function EditTaskDialog({ task, onClose, onEdit }: EditTaskDialogProps) {
         const hours = String(taskDate.getHours()).padStart(2, '0');
         const minutes = String(taskDate.getMinutes()).padStart(2, '0');
         setTime(`${hours}:${minutes}`);
-        setDate(taskDate);
+        setSelectedDate(taskDate);
       } else {
         // Якщо дата невалідна, встановлюємо поточний час
         const now = new Date();
         const hours = String(now.getHours()).padStart(2, '0');
         const minutes = String(now.getMinutes()).padStart(2, '0');
         setTime(`${hours}:${minutes}`);
-        setDate(now);
+        setSelectedDate(now);
       }
     } catch (error) {
       console.error("Помилка при ініціалізації часу:", error);
       // Встановлюємо значення за замовчуванням
       setTime("12:00");
-      setDate(new Date());
+      setSelectedDate(new Date());
     }
   }, [task.date]);
   
@@ -60,20 +62,25 @@ export function EditTaskDialog({ task, onClose, onEdit }: EditTaskDialogProps) {
   const handleDateSelect = (newDate: Date | undefined) => {
     if (newDate) {
       // Зберігаємо поточний час
-      const currentDate = new Date(date);
-      newDate.setHours(currentDate.getHours(), currentDate.getMinutes(), 0, 0);
-      setDate(newDate);
+      const currentDate = new Date(selectedDate);
+      const newDateTime = new Date(newDate);
+      newDateTime.setHours(currentDate.getHours(), currentDate.getMinutes(), 0, 0);
+      console.log("Вибрана нова дата:", newDateTime);
+      setSelectedDate(newDateTime);
     }
   };
   
   // Обробник зміни часу
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTime(e.target.value);
     try {
-      const [hours, minutes] = e.target.value.split(':').map(Number);
-      const newDate = new Date(date);
+      const newTime = e.target.value;
+      setTime(newTime);
+      
+      const [hours, minutes] = newTime.split(':').map(Number);
+      const newDate = new Date(selectedDate);
       newDate.setHours(hours, minutes, 0, 0);
-      setDate(newDate);
+      console.log("Оновлена дата з новим часом:", newDate);
+      setSelectedDate(newDate);
     } catch (error) {
       console.error("Помилка при зміні часу:", error);
     }
@@ -82,6 +89,7 @@ export function EditTaskDialog({ task, onClose, onEdit }: EditTaskDialogProps) {
   // Обробник відправки форми
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
     try {
       // Базова валідація
@@ -90,16 +98,24 @@ export function EditTaskDialog({ task, onClose, onEdit }: EditTaskDialogProps) {
       }
       
       // Перевіряємо, чи валідна дата
-      if (isNaN(date.getTime())) {
+      if (isNaN(selectedDate.getTime())) {
         throw new Error("Необхідно вказати коректну дату");
       }
       
+      console.log("Відправка форми з даними:", {
+        id: task.id,
+        title,
+        description,
+        category,
+        date: selectedDate
+      });
+      
       // Створюємо оновлений об'єкт задачі
       const updatedTask = {
-        title,
-        description: description || undefined,
+        title: title.trim(),
+        description: description.trim() || undefined,
         category: category || undefined,
-        date: date,
+        date: selectedDate,
       };
       
       // Викликаємо функцію редагування
@@ -114,6 +130,8 @@ export function EditTaskDialog({ task, onClose, onEdit }: EditTaskDialogProps) {
         description: error instanceof Error ? error.message : "Не вдалося оновити задачу. Будь ласка, спробуйте ще раз.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -156,15 +174,16 @@ export function EditTaskDialog({ task, onClose, onEdit }: EditTaskDialogProps) {
                   className="w-full justify-start text-left font-normal"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {format(date, "PPP", { locale: require('date-fns/locale/uk') })}
+                  {format(selectedDate, "PPP", { locale: require('date-fns/locale/uk') })}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
-                  selected={date}
+                  selected={selectedDate}
                   onSelect={handleDateSelect}
                   initialFocus
+                  className="p-3 pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
@@ -203,15 +222,15 @@ export function EditTaskDialog({ task, onClose, onEdit }: EditTaskDialogProps) {
           </div>
           
           <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" type="button" onClick={onClose}>
+            <Button variant="outline" type="button" onClick={onClose} disabled={isLoading}>
               Скасувати
             </Button>
-            <Button type="submit">
-              Зберегти
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Збереження..." : "Зберегти"}
             </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
   );
-} 
+}

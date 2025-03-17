@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Check, Trash2, ChevronRight, Edit2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -87,11 +88,14 @@ export function TaskCard({
   };
 
   const handleEdit = () => {
+    console.log("Відкриваємо діалог редагування для задачі:", id);
     setShowEditDialog(true);
   };
 
   const handleEditSubmit = (id: string, updatedTask: { title: string; description?: string; date: Date; category?: string }) => {
+    console.log("Оновлюємо задачу:", id, updatedTask);
     onEdit(id, updatedTask);
+    setShowEditDialog(false);
     toast({
       title: "Задачу оновлено",
       description: "Зміни успішно збережено",
@@ -101,7 +105,7 @@ export function TaskCard({
   return (
     <>
       <Card 
-        className={`task-card ${isCompleted ? 'opacity-70' : ''} ${isDeleting ? 'translate-x-full opacity-0' : ''}`}
+        className={`task-card ${isCompleted ? 'opacity-70' : ''} ${isDeleting ? 'translate-x-full opacity-0' : ''} transition-all duration-300`}
       >
         <div className="flex items-center gap-3 p-4">
           <button
