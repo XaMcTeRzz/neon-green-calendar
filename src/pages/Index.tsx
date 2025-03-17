@@ -257,26 +257,62 @@ const Index = () => {
   };
   
   const handleEditTask = (id: string, updatedTask: { title: string; description?: string; date: Date; category?: string }) => {
-    setTasks(prevTasks => {
-      const newTasks = prevTasks.map(task => {
-        if (task.id === id) {
-          return {
-            ...task,
-            ...updatedTask
-          };
+    try {
+      console.log("Редагування задачі:", id, updatedTask);
+      
+      // Перевіряємо, чи валідна дата
+      if (isNaN(updatedTask.date.getTime())) {
+        throw new Error("Невалідна дата");
+      }
+      
+      setTasks(prevTasks => {
+        // Знаходимо задачу для редагування
+        const taskToEdit = prevTasks.find(task => task.id === id);
+        if (!taskToEdit) {
+          console.error("Задачу для редагування не знайдено:", id);
+          return prevTasks;
         }
-        return task;
+        
+        // Створюємо нові задачі з оновленою задачею
+        const newTasks = prevTasks.map(task => {
+          if (task.id === id) {
+            return {
+              ...task,
+              title: updatedTask.title,
+              description: updatedTask.description,
+              date: updatedTask.date,
+              category: updatedTask.category
+            };
+          }
+          return task;
+        });
+        
+        // Перетворюємо дати в рядки перед збереженням в localStorage
+        const tasksForStorage = newTasks.map(task => ({
+          ...task,
+          date: task.date.toISOString() // Зберігаємо дату в ISO форматі
+        }));
+        
+        // Зберігаємо в localStorage
+        localStorage.setItem('tasks', JSON.stringify(tasksForStorage));
+        
+        // Повертаємо оновлені задачі
+        return newTasks;
       });
       
-      // Перетворюємо дати в рядки перед збереженням в localStorage
-      const tasksForStorage = newTasks.map(task => ({
-        ...task,
-        date: task.date.toISOString() // Зберігаємо дату в ISO форматі
-      }));
-      
-      localStorage.setItem('tasks', JSON.stringify(tasksForStorage));
-      return newTasks;
-    });
+      // Показуємо повідомлення про успішне редагування
+      toast({
+        title: "Задачу оновлено",
+        description: `"${updatedTask.title}" успішно оновлено`,
+      });
+    } catch (error) {
+      console.error("Помилка при редагуванні задачі:", error);
+      toast({
+        title: "Помилка редагування",
+        description: "Не вдалося оновити задачу. Спробуйте ще раз.",
+        variant: "destructive",
+      });
+    }
   };
   
   // Функція для активації мікрофона Джарвіса
