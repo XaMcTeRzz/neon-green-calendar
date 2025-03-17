@@ -40,11 +40,26 @@ const loadTasks = (): Task[] => {
 };
 
 /**
+ * Безпечно перетворює рядок дати в об'єкт Date
+ */
+const safeParseDate = (dateStr: string): Date | null => {
+  try {
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? null : date;
+  } catch (error) {
+    console.error('Помилка парсингу дати:', error);
+    return null;
+  }
+};
+
+/**
  * Фільтрує задачі за вказаним діапазоном дат
  */
 const filterTasksByDateRange = (tasks: Task[], startDate: Date, endDate: Date): Task[] => {
   return tasks.filter(task => {
-    const taskDate = new Date(task.dueDate);
+    const taskDate = safeParseDate(task.dueDate);
+    if (!taskDate) return false;
+    
     // Встановлюємо час на 0, щоб порівнювати тільки дати
     const taskDateOnly = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate());
     const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
@@ -74,7 +89,8 @@ const getTasksForDay = (date: Date): Task[] => {
   
   // Додаємо до звіту також прострочені задачі
   const overdueTasksNotInToday = allActiveTasks.filter(task => {
-    const taskDate = new Date(task.dueDate);
+    const taskDate = safeParseDate(task.dueDate);
+    if (!taskDate) return false;
     return taskDate < startOfDay && !tasksForToday.some(t => t.id === task.id);
   });
   
@@ -105,7 +121,8 @@ const getTasksForWeek = (date: Date): { tasks: Task[], startDate: Date, endDate:
   // Додаємо прострочені активні задачі
   const allActiveTasks = tasks.filter(task => !task.completed);
   const overdueTasksNotInWeek = allActiveTasks.filter(task => {
-    const taskDate = new Date(task.dueDate);
+    const taskDate = safeParseDate(task.dueDate);
+    if (!taskDate) return false;
     return taskDate < startDate && !weekTasks.some(t => t.id === task.id);
   });
   
@@ -222,9 +239,20 @@ export const sendTestReport = async (): Promise<boolean> => {
     return false;
   }
   
-  const today = new Date();
-  const tasks = getTasksForDay(today);
-  const report = `<b>🧪 Тестовий звіт</b>\n\n` + formatDailyReport(tasks, today);
-  
-  return await sendTelegramMessage(settings.botToken, settings.chatId, report);
+  try {
+    // Отримуємо всі задачі
+    const today = new Date();
+    const tasks = getTasksForDay(today);
+    
+    // Використовуємо функцію форматування звіту
+    const report = formatDailyReport(tasks, today);
+    
+    // Додаємо заголовок тестового звіту
+    const testReport = `<b>🧪 ТЕСТОВИЙ ЗВІТ</b>\n\n${report}`;
+    
+    return await sendTelegramMessage(settings.botToken, settings.chatId, testReport);
+  } catch (error) {
+    console.error('Помилка відправки тестового звіту:', error);
+    return false;
+  }
 }; 

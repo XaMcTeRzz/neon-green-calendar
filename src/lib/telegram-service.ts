@@ -108,6 +108,35 @@ export const validateBotToken = async (botToken: string): Promise<boolean> => {
 };
 
 /**
+ * Повертає правильний відмінок слова "задача" залежно від кількості
+ */
+const getTaskWordForm = (count: number): string => {
+  if (count % 10 === 1 && count % 100 !== 11) {
+    return 'задача';
+  } else if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)) {
+    return 'задачі';
+  } else {
+    return 'задач';
+  }
+};
+
+/**
+ * Безпечно форматує дату, повертаючи запасний текст у випадку Invalid Date
+ */
+const safeFormatDate = (dateStr: string, options: Intl.DateTimeFormatOptions): string => {
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      return 'дата не вказана';
+    }
+    return date.toLocaleDateString('uk-UA', options);
+  } catch (error) {
+    console.error('Помилка форматування дати:', error);
+    return 'дата не вказана';
+  }
+};
+
+/**
  * Форматує звіт про задачі за день
  */
 export const formatDailyReport = (tasks: any[], date: Date): string => {
@@ -117,10 +146,10 @@ export const formatDailyReport = (tasks: any[], date: Date): string => {
     year: 'numeric' 
   });
   
-  let report = `<b>📅 Звіт за ${formattedDate}</b>\n\n`;
+  let report = `<b>📅 ЗВІТ ЗА ${formattedDate.toUpperCase()}</b>\n\n`;
   
   if (tasks.length === 0) {
-    report += "Немає задач на цей день.";
+    report += "🔍 Немає задач на цей день.";
     return report;
   }
   
@@ -132,43 +161,57 @@ export const formatDailyReport = (tasks: any[], date: Date): string => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const overdueTasks = activeTasks.filter(task => {
-    const taskDate = new Date(task.dueDate);
-    taskDate.setHours(0, 0, 0, 0);
-    return taskDate < today;
+    try {
+      const taskDate = new Date(task.dueDate);
+      if (isNaN(taskDate.getTime())) return false;
+      taskDate.setHours(0, 0, 0, 0);
+      return taskDate < today;
+    } catch (error) {
+      console.error('Помилка обробки дати задачі:', error);
+      return false;
+    }
   });
   
   // Активні задачі на сьогодні (не прострочені)
   const todayTasks = activeTasks.filter(task => !overdueTasks.includes(task));
   
-  report += `<b>✅ Виконані задачі (${completedTasks.length}/${tasks.length}):</b>\n`;
+  const completedWord = getTaskWordForm(completedTasks.length);
+  const totalWord = getTaskWordForm(tasks.length);
+  
+  report += `<b>✅ ВИКОНАНО: ${completedTasks.length}/${tasks.length} ${completedWord}</b>\n`;
   if (completedTasks.length > 0) {
     completedTasks.forEach((task, index) => {
-      report += `${index + 1}. ${task.title}\n`;
+      report += `   ${index + 1}. ${task.title}\n`;
     });
   } else {
-    report += "Немає виконаних задач.\n";
+    report += "   Немає виконаних задач\n";
   }
   
-  report += `\n<b>⏳ Активні задачі на сьогодні (${todayTasks.length}):</b>\n`;
+  const todayWord = getTaskWordForm(todayTasks.length);
+  report += `\n<b>⏳ ЗАПЛАНОВАНО НА СЬОГОДНІ: ${todayTasks.length} ${todayWord}</b>\n`;
   if (todayTasks.length > 0) {
     todayTasks.forEach((task, index) => {
-      report += `${index + 1}. ${task.title}\n`;
+      report += `   ${index + 1}. ${task.title}\n`;
     });
   } else {
-    report += "Немає активних задач на сьогодні.\n";
+    report += "   Немає активних задач на сьогодні\n";
   }
   
   if (overdueTasks.length > 0) {
-    report += `\n<b>⚠️ Прострочені задачі (${overdueTasks.length}):</b>\n`;
+    const overdueWord = getTaskWordForm(overdueTasks.length);
+    report += `\n<b>⚠️ ПРОСТРОЧЕНО: ${overdueTasks.length} ${overdueWord}</b>\n`;
     overdueTasks.forEach((task, index) => {
-      const taskDate = new Date(task.dueDate);
-      const formattedTaskDate = taskDate.toLocaleDateString('uk-UA', { 
+      const formattedTaskDate = safeFormatDate(task.dueDate, { 
         day: 'numeric', 
         month: 'long'
       });
-      report += `${index + 1}. ${task.title} (${formattedTaskDate})\n`;
+      report += `   ${index + 1}. ${task.title} (${formattedTaskDate})\n`;
     });
   }
+  
+  // Додаємо підсумок
+  const completionRate = tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0;
+  report += `\n<b>📊 ПРОГРЕС: ${completionRate}%</b>`;
   
   return report;
 };
@@ -188,10 +231,11 @@ export const formatWeeklyReport = (tasks: any[], startDate: Date, endDate: Date)
     year: 'numeric' 
   });
   
-  let report = `<b>📊 Тижневий звіт (${startFormatted} - ${endFormatted})</b>\n\n`;
+  let report = `<b>📊 ТИЖНЕВИЙ ЗВІТ</b>\n`;
+  report += `<b>📆 ${startFormatted.toUpperCase()} - ${endFormatted.toUpperCase()}</b>\n\n`;
   
   if (tasks.length === 0) {
-    report += "Немає задач за цей період.";
+    report += "🔍 Немає задач за цей період.";
     return report;
   }
   
@@ -202,21 +246,31 @@ export const formatWeeklyReport = (tasks: any[], startDate: Date, endDate: Date)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const overdueTasks = activeTasks.filter(task => {
-    const taskDate = new Date(task.dueDate);
-    taskDate.setHours(0, 0, 0, 0);
-    return taskDate < today;
+    try {
+      const taskDate = new Date(task.dueDate);
+      if (isNaN(taskDate.getTime())) return false;
+      taskDate.setHours(0, 0, 0, 0);
+      return taskDate < today;
+    } catch (error) {
+      console.error('Помилка обробки дати задачі:', error);
+      return false;
+    }
   });
   
   // Активні задачі на цей тиждень (не прострочені)
   const currentWeekTasks = activeTasks.filter(task => !overdueTasks.includes(task));
   
-  const completionRate = Math.round((completedTasks.length / tasks.length) * 100);
+  const completionRate = tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0;
   
-  report += `<b>📈 Загальний прогрес: ${completionRate}%</b>\n`;
-  report += `<b>✅ Виконано: ${completedTasks.length} задач</b>\n`;
-  report += `<b>⏳ Активних: ${currentWeekTasks.length} задач</b>\n`;
+  const completedWord = getTaskWordForm(completedTasks.length);
+  const activeWord = getTaskWordForm(currentWeekTasks.length);
+  const overdueWord = overdueTasks.length > 0 ? getTaskWordForm(overdueTasks.length) : '';
+  
+  report += `<b>📈 ЗАГАЛЬНИЙ ПРОГРЕС: ${completionRate}%</b>\n`;
+  report += `<b>✅ ВИКОНАНО: ${completedTasks.length} ${completedWord}</b>\n`;
+  report += `<b>⏳ АКТИВНИХ: ${currentWeekTasks.length} ${activeWord}</b>\n`;
   if (overdueTasks.length > 0) {
-    report += `<b>⚠️ Прострочено: ${overdueTasks.length} задач</b>\n`;
+    report += `<b>⚠️ ПРОСТРОЧЕНО: ${overdueTasks.length} ${overdueWord}</b>\n`;
   }
   report += `\n`;
   
@@ -230,22 +284,24 @@ export const formatWeeklyReport = (tasks: any[], startDate: Date, endDate: Date)
     tasksByCategory[category].push(task);
   });
   
-  report += "<b>📋 Задачі за категоріями:</b>\n";
+  report += "<b>📋 ЗАДАЧІ ЗА КАТЕГОРІЯМИ:</b>\n";
   
   Object.entries(tasksByCategory).forEach(([category, categoryTasks]) => {
     const categoryCompleted = categoryTasks.filter(task => task.completed).length;
-    report += `\n<b>${category} (${categoryCompleted}/${categoryTasks.length}):</b>\n`;
+    const categoryTotal = categoryTasks.length;
+    const categoryWord = getTaskWordForm(categoryTotal);
+    
+    report += `\n<b>🔷 ${category.toUpperCase()} (${categoryCompleted}/${categoryTotal} ${categoryWord}):</b>\n`;
     
     // Спочатку виводимо активні задачі
     const activeCategoryTasks = categoryTasks.filter(task => !task.completed && !overdueTasks.includes(task));
     if (activeCategoryTasks.length > 0) {
       activeCategoryTasks.forEach(task => {
-        const taskDate = new Date(task.dueDate);
-        const formattedTaskDate = taskDate.toLocaleDateString('uk-UA', { 
+        const formattedTaskDate = safeFormatDate(task.dueDate, { 
           day: 'numeric', 
           month: 'long'
         });
-        report += `⏳ ${task.title} (${formattedTaskDate})\n`;
+        report += `   ⏳ ${task.title} (${formattedTaskDate})\n`;
       });
     }
     
@@ -253,12 +309,11 @@ export const formatWeeklyReport = (tasks: any[], startDate: Date, endDate: Date)
     const overdueCategoryTasks = categoryTasks.filter(task => overdueTasks.includes(task));
     if (overdueCategoryTasks.length > 0) {
       overdueCategoryTasks.forEach(task => {
-        const taskDate = new Date(task.dueDate);
-        const formattedTaskDate = taskDate.toLocaleDateString('uk-UA', { 
+        const formattedTaskDate = safeFormatDate(task.dueDate, { 
           day: 'numeric', 
           month: 'long'
         });
-        report += `⚠️ ${task.title} (${formattedTaskDate}) - прострочено\n`;
+        report += `   ⚠️ ${task.title} (${formattedTaskDate}) - прострочено\n`;
       });
     }
     
@@ -266,7 +321,7 @@ export const formatWeeklyReport = (tasks: any[], startDate: Date, endDate: Date)
     const completedCategoryTasks = categoryTasks.filter(task => task.completed);
     if (completedCategoryTasks.length > 0) {
       completedCategoryTasks.forEach(task => {
-        report += `✅ ${task.title}\n`;
+        report += `   ✅ ${task.title}\n`;
       });
     }
   });
@@ -296,13 +351,14 @@ export const sendTestReport = async (): Promise<boolean> => {
       year: 'numeric' 
     });
     
-    let message = `<b>🧪 Тестовий звіт</b>\n\n` +
+    let message = `<b>🧪 ТЕСТОВИЙ ЗВІТ</b>\n\n` +
       `Це тестове повідомлення для перевірки налаштувань Telegram бота.\n\n` +
       `<b>📅 Дата:</b> ${formattedDate}\n` +
       `<b>⏰ Час:</b> ${today.toLocaleTimeString('uk-UA')}\n\n`;
     
     // Додаємо інформацію про всі задачі
-    message += `<b>📋 Всі задачі (${allTasks.length}):</b>\n\n`;
+    const totalWord = getTaskWordForm(allTasks.length);
+    message += `<b>📋 ВСІ ЗАДАЧІ (${allTasks.length} ${totalWord}):</b>\n\n`;
     
     if (allTasks.length === 0) {
       message += "У вас немає жодних задач.\n";
@@ -310,35 +366,37 @@ export const sendTestReport = async (): Promise<boolean> => {
       const activeTasks = allTasks.filter((task: any) => !task.completed);
       const completedTasks = allTasks.filter((task: any) => task.completed);
       
-      message += `<b>⏳ Активні задачі (${activeTasks.length}):</b>\n`;
+      const activeWord = getTaskWordForm(activeTasks.length);
+      message += `<b>⏳ АКТИВНІ ЗАДАЧІ (${activeTasks.length} ${activeWord}):</b>\n`;
       if (activeTasks.length > 0) {
         activeTasks.forEach((task: any, index: number) => {
-          const taskDate = new Date(task.dueDate);
-          const formattedTaskDate = taskDate.toLocaleDateString('uk-UA', { 
+          const formattedTaskDate = safeFormatDate(task.dueDate, { 
             day: 'numeric', 
             month: 'long'
           });
-          message += `${index + 1}. ${task.title} (${formattedTaskDate})\n`;
+          message += `   ${index + 1}. ${task.title} (${formattedTaskDate})\n`;
         });
       } else {
-        message += "Немає активних задач.\n";
+        message += "   Немає активних задач\n";
       }
       
-      message += `\n<b>✅ Виконані задачі (${completedTasks.length}):</b>\n`;
+      const completedWord = getTaskWordForm(completedTasks.length);
+      message += `\n<b>✅ ВИКОНАНІ ЗАДАЧІ (${completedTasks.length} ${completedWord}):</b>\n`;
       if (completedTasks.length > 0) {
         completedTasks.slice(0, 5).forEach((task: any, index: number) => {
-          message += `${index + 1}. ${task.title}\n`;
+          message += `   ${index + 1}. ${task.title}\n`;
         });
         
         if (completedTasks.length > 5) {
-          message += `... та ще ${completedTasks.length - 5} задач\n`;
+          const remainingWord = getTaskWordForm(completedTasks.length - 5);
+          message += `   ... та ще ${completedTasks.length - 5} ${remainingWord}\n`;
         }
       } else {
-        message += "Немає виконаних задач.\n";
+        message += "   Немає виконаних задач\n";
       }
     }
     
-    message += `\nЯкщо ви бачите це повідомлення, значить налаштування бота працюють коректно.`;
+    message += `\n<b>✨ Якщо ви бачите це повідомлення, значить налаштування бота працюють коректно.</b>`;
     
     return await sendTelegramMessage(settings.botToken, settings.chatId, message);
   } catch (error) {
