@@ -261,7 +261,7 @@ const Index = () => {
       console.log("Редагування задачі:", id, updatedTask);
       
       // Перевіряємо, чи валідна дата
-      if (isNaN(updatedTask.date.getTime())) {
+      if (!updatedTask.date || isNaN(updatedTask.date.getTime())) {
         throw new Error("Невалідна дата");
       }
       
@@ -276,11 +276,20 @@ const Index = () => {
         // Створюємо нові задачі з оновленою задачею
         const newTasks = prevTasks.map(task => {
           if (task.id === id) {
+            // Створюємо нову дату з оновленої дати
+            const newDate = new Date(updatedTask.date);
+            
+            // Переконуємося, що дата валідна
+            if (isNaN(newDate.getTime())) {
+              console.error("Невалідна дата при оновленні задачі:", updatedTask.date);
+              return task; // Повертаємо оригінальну задачу, якщо дата невалідна
+            }
+            
             return {
               ...task,
               title: updatedTask.title,
               description: updatedTask.description,
-              date: updatedTask.date,
+              date: newDate,
               category: updatedTask.category
             };
           }

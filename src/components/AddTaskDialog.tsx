@@ -7,6 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Task } from "@/components/TasksList";
 import { v4 as uuidv4 } from "uuid";
+import { Calendar as CalendarIcon, Clock } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface AddTaskDialogProps {
   selectedDate: Date;
@@ -18,26 +26,54 @@ export function AddTaskDialog({ selectedDate, onClose, onAdd }: AddTaskDialogPro
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
+  const [date, setDate] = useState<Date>(selectedDate);
   const [time, setTime] = useState("12:00");
+
+  // Обробник зміни дати через календар
+  const handleDateSelect = (newDate: Date | undefined) => {
+    if (newDate) {
+      // Зберігаємо поточний час
+      const [hours, minutes] = time.split(':').map(Number);
+      newDate.setHours(hours, minutes, 0, 0);
+      setDate(newDate);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const [hours, minutes] = time.split(":");
-    const taskDate = new Date(selectedDate);
-    taskDate.setHours(parseInt(hours), parseInt(minutes));
+    try {
+      // Отримуємо години та хвилини з часу
+      const [hours, minutes] = time.split(":").map(Number);
+      
+      // Створюємо нову дату з вибраної дати та часу
+      const taskDate = new Date(date);
+      taskDate.setHours(hours, minutes, 0, 0);
+      
+      // Перевіряємо, чи валідна дата
+      if (isNaN(taskDate.getTime())) {
+        throw new Error("Невалідна дата");
+      }
 
-    const newTask: Task = {
-      id: uuidv4(),
-      title,
-      description: description || undefined,
-      category: category || undefined,
-      date: taskDate,
-      completed: false,
-    };
-    
-    onAdd(newTask);
-    onClose();
+      // Створюємо нову задачу
+      const newTask: Task = {
+        id: uuidv4(),
+        title,
+        description: description || undefined,
+        category: category || undefined,
+        date: taskDate,
+        completed: false,
+      };
+      
+      // Додаємо задачу
+      onAdd(newTask);
+      
+      // Закриваємо діалог
+      onClose();
+    } catch (error) {
+      console.error("Помилка при створенні задачі:", error);
+      alert("Виникла помилка при створенні задачі. Будь ласка, спробуйте ще раз.");
+    }
   };
 
   return (
@@ -71,14 +107,41 @@ export function AddTaskDialog({ selectedDate, onClose, onAdd }: AddTaskDialogPro
           </div>
           
           <div className="space-y-2">
+            <Label>Дата</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {format(date, "PPP")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={handleDateSelect}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          
+          <div className="space-y-2">
             <Label htmlFor="time">Час</Label>
-            <Input
-              id="time"
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              required
-            />
+            <div className="relative flex items-center">
+              <Clock className="absolute left-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="time"
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="pl-10"
+                required
+              />
+            </div>
           </div>
           
           <div className="space-y-2">

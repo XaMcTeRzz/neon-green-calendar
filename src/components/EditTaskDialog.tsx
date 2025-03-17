@@ -7,6 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Task } from "@/components/TasksList";
 import { toast } from "@/hooks/use-toast";
+import { Calendar as CalendarIcon, Clock } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface EditTaskDialogProps {
   task: Task;
@@ -48,36 +56,13 @@ export function EditTaskDialog({ task, onClose, onEdit }: EditTaskDialogProps) {
     }
   }, [task.date]);
   
-  // Форматування дати для поля input type="date"
-  const formatDateForInput = (date: Date): string => {
-    try {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    } catch (error) {
-      console.error("Помилка форматування дати:", error);
-      return new Date().toISOString().split('T')[0];
-    }
-  };
-  
-  // Обробник зміни дати
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      const newDate = new Date(e.target.value);
-      if (!isNaN(newDate.getTime())) {
-        // Зберігаємо поточний час
-        const currentDate = new Date(date);
-        newDate.setHours(currentDate.getHours(), currentDate.getMinutes(), 0, 0);
-        setDate(newDate);
-      }
-    } catch (error) {
-      console.error("Помилка при зміні дати:", error);
-      toast({
-        title: "Помилка",
-        description: "Невалідна дата. Будь ласка, спробуйте ще раз.",
-        variant: "destructive",
-      });
+  // Обробник зміни дати через календар
+  const handleDateSelect = (newDate: Date | undefined) => {
+    if (newDate) {
+      // Зберігаємо поточний час
+      const currentDate = new Date(date);
+      newDate.setHours(currentDate.getHours(), currentDate.getMinutes(), 0, 0);
+      setDate(newDate);
     }
   };
   
@@ -158,25 +143,41 @@ export function EditTaskDialog({ task, onClose, onEdit }: EditTaskDialogProps) {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="date">Дата</Label>
-            <Input
-              id="date"
-              type="date"
-              value={formatDateForInput(date)}
-              onChange={handleDateChange}
-              required
-            />
+            <Label>Дата</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {format(date, "PPP", { locale: require('date-fns/locale/uk') })}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={handleDateSelect}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="time">Час</Label>
-            <Input
-              id="time"
-              type="time"
-              value={time}
-              onChange={handleTimeChange}
-              required
-            />
+            <div className="relative flex items-center">
+              <Clock className="absolute left-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="time"
+                type="time"
+                value={time}
+                onChange={handleTimeChange}
+                className="pl-10"
+                required
+              />
+            </div>
           </div>
           
           <div className="space-y-2">
