@@ -153,9 +153,17 @@ export const formatDailyReport = (tasks: any[], date: Date): string => {
     return report;
   }
   
+  // Сортуємо задачі за датою створення, якщо вона є
+  const sortedTasks = [...tasks].sort((a, b) => {
+    if (a.createdAt && b.createdAt) {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    }
+    return 0;
+  });
+  
   // Розділяємо задачі на виконані, активні на сьогодні та прострочені
-  const completedTasks = tasks.filter(task => task.completed);
-  const activeTasks = tasks.filter(task => !task.completed);
+  const completedTasks = sortedTasks.filter(task => task.completed);
+  const activeTasks = sortedTasks.filter(task => !task.completed);
   
   // Перевіряємо, чи є прострочені задачі
   const today = new Date();
@@ -239,8 +247,16 @@ export const formatWeeklyReport = (tasks: any[], startDate: Date, endDate: Date)
     return report;
   }
   
-  const completedTasks = tasks.filter(task => task.completed);
-  const activeTasks = tasks.filter(task => !task.completed);
+  // Сортуємо задачі за датою створення, якщо вона є
+  const sortedTasks = [...tasks].sort((a, b) => {
+    if (a.createdAt && b.createdAt) {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    }
+    return 0;
+  });
+  
+  const completedTasks = sortedTasks.filter(task => task.completed);
+  const activeTasks = sortedTasks.filter(task => !task.completed);
   
   // Перевіряємо, чи є прострочені задачі
   const today = new Date();
@@ -276,7 +292,7 @@ export const formatWeeklyReport = (tasks: any[], startDate: Date, endDate: Date)
   
   // Групуємо задачі за категоріями
   const tasksByCategory: Record<string, any[]> = {};
-  tasks.forEach(task => {
+  sortedTasks.forEach(task => {
     const category = task.category || 'Без категорії';
     if (!tasksByCategory[category]) {
       tasksByCategory[category] = [];

@@ -18,12 +18,13 @@ const getTaskWordForm = (count: number): string => {
 };
 
 export interface Task {
-  id: string;
-  title: string;
-  description?: string;
-  completed: boolean;
-  date: Date;
-  category?: string;
+  id: string;            // Унікальний ідентифікатор
+  title: string;         // Тема задачі
+  description?: string;  // Опис задачі (опціональний)
+  completed: boolean;    // Статус виконання
+  date: Date;            // Дата та час виконання
+  category?: string;     // Категорія (опціональне)
+  createdAt?: Date;      // Дата створення (нове поле)
 }
 
 interface TasksListProps {

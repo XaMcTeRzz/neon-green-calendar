@@ -84,9 +84,14 @@ export function EditTaskDialog({ task, onClose, onEdit }: EditTaskDialogProps) {
     e.preventDefault();
     
     try {
+      // Базова валідація
+      if (!title.trim()) {
+        throw new Error("Тема задачі не може бути порожньою");
+      }
+      
       // Перевіряємо, чи валідна дата
       if (isNaN(date.getTime())) {
-        throw new Error("Невалідна дата");
+        throw new Error("Необхідно вказати коректну дату");
       }
       
       // Створюємо оновлений об'єкт задачі
@@ -106,7 +111,7 @@ export function EditTaskDialog({ task, onClose, onEdit }: EditTaskDialogProps) {
       console.error("Помилка при оновленні задачі:", error);
       toast({
         title: "Помилка",
-        description: "Не вдалося оновити задачу. Будь ласка, спробуйте ще раз.",
+        description: error instanceof Error ? error.message : "Не вдалося оновити задачу. Будь ласка, спробуйте ще раз.",
         variant: "destructive",
       });
     }

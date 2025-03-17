@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Calendar as CalendarIcon, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
+import { toast } from "@/hooks/use-toast";
 import {
   Popover,
   PopoverContent,
@@ -43,6 +44,11 @@ export function AddTaskDialog({ selectedDate, onClose, onAdd }: AddTaskDialogPro
     e.preventDefault();
     
     try {
+      // Базова валідація
+      if (!title.trim()) {
+        throw new Error("Тема задачі не може бути порожньою");
+      }
+      
       // Отримуємо години та хвилини з часу
       const [hours, minutes] = time.split(":").map(Number);
       
@@ -52,7 +58,7 @@ export function AddTaskDialog({ selectedDate, onClose, onAdd }: AddTaskDialogPro
       
       // Перевіряємо, чи валідна дата
       if (isNaN(taskDate.getTime())) {
-        throw new Error("Невалідна дата");
+        throw new Error("Необхідно вказати коректну дату та час");
       }
 
       // Створюємо нову задачу
@@ -63,6 +69,7 @@ export function AddTaskDialog({ selectedDate, onClose, onAdd }: AddTaskDialogPro
         category: category || undefined,
         date: taskDate,
         completed: false,
+        createdAt: new Date(), // Додаємо дату створення
       };
       
       // Додаємо задачу
@@ -72,7 +79,11 @@ export function AddTaskDialog({ selectedDate, onClose, onAdd }: AddTaskDialogPro
       onClose();
     } catch (error) {
       console.error("Помилка при створенні задачі:", error);
-      alert("Виникла помилка при створенні задачі. Будь ласка, спробуйте ще раз.");
+      toast({
+        title: "Помилка",
+        description: error instanceof Error ? error.message : "Не вдалося створити задачу",
+        variant: "destructive",
+      });
     }
   };
 

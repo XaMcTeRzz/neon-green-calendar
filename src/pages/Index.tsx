@@ -63,7 +63,8 @@ const Index = () => {
         const parsedTasks = JSON.parse(savedTasks);
         const tasksWithDates = parsedTasks.map((task: any) => ({
           ...task,
-          date: new Date(task.date)
+          date: new Date(task.date),
+          createdAt: task.createdAt ? new Date(task.createdAt) : undefined
         }));
         setTasks(tasksWithDates);
       } catch (error) {
@@ -113,6 +114,7 @@ const Index = () => {
         date: taskDate,
         completed: false,
         category: taskData.category,
+        createdAt: new Date() // Додаємо дату створення
       };
       
       // Додавання задачі до списку
@@ -122,7 +124,8 @@ const Index = () => {
         // Перетворюємо дати в рядки перед збереженням в localStorage
         const tasksForStorage = updatedTasks.map(task => ({
           ...task,
-          date: task.date.toISOString() // Зберігаємо дату в ISO форматі
+          date: task.date.toISOString(), // Зберігаємо дату в ISO форматі
+          createdAt: task.createdAt ? task.createdAt.toISOString() : undefined // Зберігаємо дату створення в ISO форматі, якщо вона є
         }));
         
         localStorage.setItem('tasks', JSON.stringify(tasksForStorage));
@@ -250,7 +253,15 @@ const Index = () => {
   const handleAddTaskDialog = (newTask: Task) => {
     setTasks(prevTasks => {
       const updatedTasks = [...prevTasks, newTask];
-      localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+      
+      // Перетворюємо дати в рядки перед збереженням в localStorage
+      const tasksForStorage = updatedTasks.map(task => ({
+        ...task,
+        date: task.date.toISOString(), // Зберігаємо дату в ISO форматі
+        createdAt: task.createdAt ? task.createdAt.toISOString() : undefined // Зберігаємо дату створення в ISO форматі, якщо вона є
+      }));
+      
+      localStorage.setItem('tasks', JSON.stringify(tasksForStorage));
       return updatedTasks;
     });
     setShowAddTask(false);
@@ -260,9 +271,13 @@ const Index = () => {
     try {
       console.log("Редагування задачі:", id, updatedTask);
       
-      // Перевіряємо, чи валідна дата
+      // Валідація даних
+      if (!updatedTask.title.trim()) {
+        throw new Error("Тема задачі не може бути порожньою");
+      }
+      
       if (!updatedTask.date || isNaN(updatedTask.date.getTime())) {
-        throw new Error("Невалідна дата");
+        throw new Error("Необхідно вказати коректну дату");
       }
       
       setTasks(prevTasks => {
@@ -291,6 +306,7 @@ const Index = () => {
               description: updatedTask.description,
               date: newDate,
               category: updatedTask.category
+              // Зберігаємо createdAt і completed без змін
             };
           }
           return task;
@@ -299,7 +315,8 @@ const Index = () => {
         // Перетворюємо дати в рядки перед збереженням в localStorage
         const tasksForStorage = newTasks.map(task => ({
           ...task,
-          date: task.date.toISOString() // Зберігаємо дату в ISO форматі
+          date: task.date.toISOString(), // Зберігаємо дату в ISO форматі
+          createdAt: task.createdAt ? task.createdAt.toISOString() : undefined // Зберігаємо дату створення в ISO форматі, якщо вона є
         }));
         
         // Зберігаємо в localStorage
@@ -318,7 +335,7 @@ const Index = () => {
       console.error("Помилка при редагуванні задачі:", error);
       toast({
         title: "Помилка редагування",
-        description: "Не вдалося оновити задачу. Спробуйте ще раз.",
+        description: error instanceof Error ? error.message : "Не вдалося оновити задачу. Спробуйте ще раз.",
         variant: "destructive",
       });
     }
@@ -330,7 +347,26 @@ const Index = () => {
       jarvisRef.current.startListening();
     }
   };
-  
+
+  // Функція для сортування задач за датою
+  const sortTasksByDate = (tasks: Task[]): Task[] => {
+    return [...tasks].sort((a, b) => a.date.getTime() - b.date.getTime());
+  };
+
+  // Функція для фільтрації задач за статусом виконання
+  const filterTasksByStatus = (tasks: Task[], completed: boolean): Task[] => {
+    return tasks.filter(task => task.completed === completed);
+  };
+
+  // Функція для пошуку задач за назвою або описом
+  const searchTasks = (tasks: Task[], query: string): Task[] => {
+    const lowerCaseQuery = query.toLowerCase();
+    return tasks.filter(task => 
+      task.title.toLowerCase().includes(lowerCaseQuery) || 
+      (task.description && task.description.toLowerCase().includes(lowerCaseQuery))
+    );
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground pb-16 relative">
       <div className="container max-w-md mx-auto px-4 py-6 flex items-center justify-center flex-col relative">
