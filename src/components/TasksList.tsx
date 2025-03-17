@@ -4,6 +4,19 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
+/**
+ * Повертає правильний відмінок слова "задача" залежно від кількості
+ */
+const getTaskWordForm = (count: number): string => {
+  if (count % 10 === 1 && count % 100 !== 11) {
+    return 'задача';
+  } else if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)) {
+    return 'задачі';
+  } else {
+    return 'задач';
+  }
+};
+
 export interface Task {
   id: string;
   title: string;
@@ -76,7 +89,7 @@ export function TasksList({ tasks, date, onTaskComplete, onTaskDelete, onEditTas
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-primary capitalize">{formattedDate}</h2>
         <span className="text-xs px-2 py-1 rounded-full bg-primary/20 text-primary">
-          {filteredTasks.length} задач
+          {filteredTasks.length} {getTaskWordForm(filteredTasks.length)}
         </span>
       </div>
       

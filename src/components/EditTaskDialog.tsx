@@ -17,25 +17,49 @@ export function EditTaskDialog({ task, onClose, onEdit }: EditTaskDialogProps) {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || "");
   const [category, setCategory] = useState(task.category || "");
-  const [time, setTime] = useState(
-    new Date(task.date).toTimeString().slice(0, 5)
-  );
+  
+  // Безпечно отримуємо час з дати
+  const getTimeFromDate = (date: Date): string => {
+    try {
+      return date.toTimeString().slice(0, 5);
+    } catch (error) {
+      console.error("Помилка отримання часу з дати:", error);
+      return "12:00"; // Значення за замовчуванням
+    }
+  };
+  
+  const [time, setTime] = useState(getTimeFromDate(task.date));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const [hours, minutes] = time.split(":");
-    const newDate = new Date(task.date);
-    newDate.setHours(parseInt(hours), parseInt(minutes));
-
-    onEdit(task.id, {
-      title,
-      description: description || undefined,
-      category: category || undefined,
-      date: newDate,
-    });
-    
-    onClose();
+    try {
+      // Створюємо нову дату на основі поточної дати задачі
+      const newDate = new Date(task.date);
+      
+      // Розбираємо час на години та хвилини
+      const [hours, minutes] = time.split(":").map(Number);
+      
+      // Встановлюємо години та хвилини
+      newDate.setHours(hours, minutes, 0, 0);
+      
+      // Перевіряємо, чи валідна дата
+      if (isNaN(newDate.getTime())) {
+        throw new Error("Невалідна дата");
+      }
+      
+      onEdit(task.id, {
+        title,
+        description: description || undefined,
+        category: category || undefined,
+        date: newDate,
+      });
+      
+      onClose();
+    } catch (error) {
+      console.error("Помилка при оновленні задачі:", error);
+      alert("Виникла помилка при збереженні задачі. Будь ласка, спробуйте ще раз.");
+    }
   };
 
   return (

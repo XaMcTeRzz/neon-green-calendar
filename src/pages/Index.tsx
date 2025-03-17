@@ -116,7 +116,18 @@ const Index = () => {
       };
       
       // Додавання задачі до списку
-      setTasks(prevTasks => [...prevTasks, newTask]);
+      setTasks(prevTasks => {
+        const updatedTasks = [...prevTasks, newTask];
+        
+        // Перетворюємо дати в рядки перед збереженням в localStorage
+        const tasksForStorage = updatedTasks.map(task => ({
+          ...task,
+          date: task.date.toISOString() // Зберігаємо дату в ISO форматі
+        }));
+        
+        localStorage.setItem('tasks', JSON.stringify(tasksForStorage));
+        return updatedTasks;
+      });
       
       // Закриття форми
       setShowAddForm(false);
@@ -189,7 +200,14 @@ const Index = () => {
         }
         return task;
       });
-      localStorage.setItem('tasks', JSON.stringify(newTasks));
+      
+      // Перетворюємо дати в рядки перед збереженням в localStorage
+      const tasksForStorage = newTasks.map(task => ({
+        ...task,
+        date: task.date.toISOString() // Зберігаємо дату в ISO форматі
+      }));
+      
+      localStorage.setItem('tasks', JSON.stringify(tasksForStorage));
       return newTasks;
     });
   };
@@ -197,7 +215,14 @@ const Index = () => {
   const handleTaskDelete = (id: string) => {
     setTasks(prevTasks => {
       const newTasks = prevTasks.filter(task => task.id !== id);
-      localStorage.setItem('tasks', JSON.stringify(newTasks));
+      
+      // Перетворюємо дати в рядки перед збереженням в localStorage
+      const tasksForStorage = newTasks.map(task => ({
+        ...task,
+        date: task.date.toISOString() // Зберігаємо дату в ISO форматі
+      }));
+      
+      localStorage.setItem('tasks', JSON.stringify(tasksForStorage));
       return newTasks;
     });
     
@@ -243,7 +268,13 @@ const Index = () => {
         return task;
       });
       
-      localStorage.setItem('tasks', JSON.stringify(newTasks));
+      // Перетворюємо дати в рядки перед збереженням в localStorage
+      const tasksForStorage = newTasks.map(task => ({
+        ...task,
+        date: task.date.toISOString() // Зберігаємо дату в ISO форматі
+      }));
+      
+      localStorage.setItem('tasks', JSON.stringify(tasksForStorage));
       return newTasks;
     });
   };
