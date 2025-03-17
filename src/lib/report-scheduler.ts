@@ -45,7 +45,12 @@ const loadTasks = (): Task[] => {
 const filterTasksByDateRange = (tasks: Task[], startDate: Date, endDate: Date): Task[] => {
   return tasks.filter(task => {
     const taskDate = new Date(task.dueDate);
-    return taskDate >= startDate && taskDate <= endDate;
+    // Встановлюємо час на 0, щоб порівнювати тільки дати
+    const taskDateOnly = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate());
+    const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+    
+    return taskDateOnly >= startDateOnly && taskDateOnly <= endDateOnly;
   });
 };
 
@@ -54,13 +59,26 @@ const filterTasksByDateRange = (tasks: Task[], startDate: Date, endDate: Date): 
  */
 const getTasksForDay = (date: Date): Task[] => {
   const tasks = loadTasks();
+  
+  // Отримуємо всі задачі, незалежно від дати, якщо вони не виконані
+  const allActiveTasks = tasks.filter(task => !task.completed);
+  
+  // Отримуємо задачі, які мають бути виконані саме в цей день
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
   
   const endOfDay = new Date(date);
   endOfDay.setHours(23, 59, 59, 999);
   
-  return filterTasksByDateRange(tasks, startOfDay, endOfDay);
+  const tasksForToday = filterTasksByDateRange(tasks, startOfDay, endOfDay);
+  
+  // Додаємо до звіту також прострочені задачі
+  const overdueTasksNotInToday = allActiveTasks.filter(task => {
+    const taskDate = new Date(task.dueDate);
+    return taskDate < startOfDay && !tasksForToday.some(t => t.id === task.id);
+  });
+  
+  return [...tasksForToday, ...overdueTasksNotInToday];
 };
 
 /**
@@ -81,9 +99,21 @@ const getTasksForWeek = (date: Date): { tasks: Task[], startDate: Date, endDate:
   endDate.setDate(endDate.getDate() + 6);
   endDate.setHours(23, 59, 59, 999);
   
+  // Отримуємо задачі за тиждень
   const weekTasks = filterTasksByDateRange(tasks, startDate, endDate);
   
-  return { tasks: weekTasks, startDate, endDate };
+  // Додаємо прострочені активні задачі
+  const allActiveTasks = tasks.filter(task => !task.completed);
+  const overdueTasksNotInWeek = allActiveTasks.filter(task => {
+    const taskDate = new Date(task.dueDate);
+    return taskDate < startDate && !weekTasks.some(t => t.id === task.id);
+  });
+  
+  return { 
+    tasks: [...weekTasks, ...overdueTasksNotInWeek], 
+    startDate, 
+    endDate 
+  };
 };
 
 /**

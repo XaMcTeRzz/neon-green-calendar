@@ -124,8 +124,21 @@ export const formatDailyReport = (tasks: any[], date: Date): string => {
     return report;
   }
   
+  // Розділяємо задачі на виконані, активні на сьогодні та прострочені
   const completedTasks = tasks.filter(task => task.completed);
-  const pendingTasks = tasks.filter(task => !task.completed);
+  const activeTasks = tasks.filter(task => !task.completed);
+  
+  // Перевіряємо, чи є прострочені задачі
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const overdueTasks = activeTasks.filter(task => {
+    const taskDate = new Date(task.dueDate);
+    taskDate.setHours(0, 0, 0, 0);
+    return taskDate < today;
+  });
+  
+  // Активні задачі на сьогодні (не прострочені)
+  const todayTasks = activeTasks.filter(task => !overdueTasks.includes(task));
   
   report += `<b>✅ Виконані задачі (${completedTasks.length}/${tasks.length}):</b>\n`;
   if (completedTasks.length > 0) {
@@ -136,13 +149,25 @@ export const formatDailyReport = (tasks: any[], date: Date): string => {
     report += "Немає виконаних задач.\n";
   }
   
-  report += `\n<b>⏳ Невиконані задачі (${pendingTasks.length}):</b>\n`;
-  if (pendingTasks.length > 0) {
-    pendingTasks.forEach((task, index) => {
+  report += `\n<b>⏳ Активні задачі на сьогодні (${todayTasks.length}):</b>\n`;
+  if (todayTasks.length > 0) {
+    todayTasks.forEach((task, index) => {
       report += `${index + 1}. ${task.title}\n`;
     });
   } else {
-    report += "Немає невиконаних задач.";
+    report += "Немає активних задач на сьогодні.\n";
+  }
+  
+  if (overdueTasks.length > 0) {
+    report += `\n<b>⚠️ Прострочені задачі (${overdueTasks.length}):</b>\n`;
+    overdueTasks.forEach((task, index) => {
+      const taskDate = new Date(task.dueDate);
+      const formattedTaskDate = taskDate.toLocaleDateString('uk-UA', { 
+        day: 'numeric', 
+        month: 'long'
+      });
+      report += `${index + 1}. ${task.title} (${formattedTaskDate})\n`;
+    });
   }
   
   return report;
@@ -171,13 +196,29 @@ export const formatWeeklyReport = (tasks: any[], startDate: Date, endDate: Date)
   }
   
   const completedTasks = tasks.filter(task => task.completed);
-  const pendingTasks = tasks.filter(task => !task.completed);
+  const activeTasks = tasks.filter(task => !task.completed);
+  
+  // Перевіряємо, чи є прострочені задачі
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const overdueTasks = activeTasks.filter(task => {
+    const taskDate = new Date(task.dueDate);
+    taskDate.setHours(0, 0, 0, 0);
+    return taskDate < today;
+  });
+  
+  // Активні задачі на цей тиждень (не прострочені)
+  const currentWeekTasks = activeTasks.filter(task => !overdueTasks.includes(task));
   
   const completionRate = Math.round((completedTasks.length / tasks.length) * 100);
   
   report += `<b>📈 Загальний прогрес: ${completionRate}%</b>\n`;
   report += `<b>✅ Виконано: ${completedTasks.length} задач</b>\n`;
-  report += `<b>⏳ Залишилось: ${pendingTasks.length} задач</b>\n\n`;
+  report += `<b>⏳ Активних: ${currentWeekTasks.length} задач</b>\n`;
+  if (overdueTasks.length > 0) {
+    report += `<b>⚠️ Прострочено: ${overdueTasks.length} задач</b>\n`;
+  }
+  report += `\n`;
   
   // Групуємо задачі за категоріями
   const tasksByCategory: Record<string, any[]> = {};
@@ -195,10 +236,39 @@ export const formatWeeklyReport = (tasks: any[], startDate: Date, endDate: Date)
     const categoryCompleted = categoryTasks.filter(task => task.completed).length;
     report += `\n<b>${category} (${categoryCompleted}/${categoryTasks.length}):</b>\n`;
     
-    categoryTasks.forEach((task, index) => {
-      const status = task.completed ? "✅" : "⏳";
-      report += `${status} ${task.title}\n`;
-    });
+    // Спочатку виводимо активні задачі
+    const activeCategoryTasks = categoryTasks.filter(task => !task.completed && !overdueTasks.includes(task));
+    if (activeCategoryTasks.length > 0) {
+      activeCategoryTasks.forEach(task => {
+        const taskDate = new Date(task.dueDate);
+        const formattedTaskDate = taskDate.toLocaleDateString('uk-UA', { 
+          day: 'numeric', 
+          month: 'long'
+        });
+        report += `⏳ ${task.title} (${formattedTaskDate})\n`;
+      });
+    }
+    
+    // Потім виводимо прострочені задачі
+    const overdueCategoryTasks = categoryTasks.filter(task => overdueTasks.includes(task));
+    if (overdueCategoryTasks.length > 0) {
+      overdueCategoryTasks.forEach(task => {
+        const taskDate = new Date(task.dueDate);
+        const formattedTaskDate = taskDate.toLocaleDateString('uk-UA', { 
+          day: 'numeric', 
+          month: 'long'
+        });
+        report += `⚠️ ${task.title} (${formattedTaskDate}) - прострочено\n`;
+      });
+    }
+    
+    // Потім виводимо виконані задачі
+    const completedCategoryTasks = categoryTasks.filter(task => task.completed);
+    if (completedCategoryTasks.length > 0) {
+      completedCategoryTasks.forEach(task => {
+        report += `✅ ${task.title}\n`;
+      });
+    }
   });
   
   return report;
@@ -214,18 +284,65 @@ export const sendTestReport = async (): Promise<boolean> => {
     return false;
   }
   
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString('uk-UA', { 
-    day: 'numeric', 
-    month: 'long', 
-    year: 'numeric' 
-  });
-  
-  const message = `<b>🧪 Тестовий звіт</b>\n\n` +
-    `Це тестове повідомлення для перевірки налаштувань Telegram бота.\n\n` +
-    `<b>📅 Дата:</b> ${formattedDate}\n` +
-    `<b>⏰ Час:</b> ${today.toLocaleTimeString('uk-UA')}\n\n` +
-    `Якщо ви бачите це повідомлення, значить налаштування бота працюють коректно.`;
-  
-  return await sendTelegramMessage(settings.botToken, settings.chatId, message);
+  // Отримуємо всі задачі з localStorage
+  try {
+    const tasksJson = localStorage.getItem('tasks');
+    const allTasks = tasksJson ? JSON.parse(tasksJson) : [];
+    
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('uk-UA', { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric' 
+    });
+    
+    let message = `<b>🧪 Тестовий звіт</b>\n\n` +
+      `Це тестове повідомлення для перевірки налаштувань Telegram бота.\n\n` +
+      `<b>📅 Дата:</b> ${formattedDate}\n` +
+      `<b>⏰ Час:</b> ${today.toLocaleTimeString('uk-UA')}\n\n`;
+    
+    // Додаємо інформацію про всі задачі
+    message += `<b>📋 Всі задачі (${allTasks.length}):</b>\n\n`;
+    
+    if (allTasks.length === 0) {
+      message += "У вас немає жодних задач.\n";
+    } else {
+      const activeTasks = allTasks.filter((task: any) => !task.completed);
+      const completedTasks = allTasks.filter((task: any) => task.completed);
+      
+      message += `<b>⏳ Активні задачі (${activeTasks.length}):</b>\n`;
+      if (activeTasks.length > 0) {
+        activeTasks.forEach((task: any, index: number) => {
+          const taskDate = new Date(task.dueDate);
+          const formattedTaskDate = taskDate.toLocaleDateString('uk-UA', { 
+            day: 'numeric', 
+            month: 'long'
+          });
+          message += `${index + 1}. ${task.title} (${formattedTaskDate})\n`;
+        });
+      } else {
+        message += "Немає активних задач.\n";
+      }
+      
+      message += `\n<b>✅ Виконані задачі (${completedTasks.length}):</b>\n`;
+      if (completedTasks.length > 0) {
+        completedTasks.slice(0, 5).forEach((task: any, index: number) => {
+          message += `${index + 1}. ${task.title}\n`;
+        });
+        
+        if (completedTasks.length > 5) {
+          message += `... та ще ${completedTasks.length - 5} задач\n`;
+        }
+      } else {
+        message += "Немає виконаних задач.\n";
+      }
+    }
+    
+    message += `\nЯкщо ви бачите це повідомлення, значить налаштування бота працюють коректно.`;
+    
+    return await sendTelegramMessage(settings.botToken, settings.chatId, message);
+  } catch (error) {
+    console.error("Помилка при формуванні тестового звіту:", error);
+    return false;
+  }
 }; 
