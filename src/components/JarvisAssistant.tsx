@@ -90,7 +90,7 @@ export const JarvisAssistant = React.forwardRef<
   // Стан для показу діалогу налаштувань
   const [showSettings, setShowSettings] = useState<boolean>(false);
 
-  // Експортуємо функцію startListening через ref
+  // Експортуємо функцію startListening че��ез ref
   React.useImperativeHandle(ref, () => ({
     startListening: () => {
       startListening();
@@ -841,4 +841,4 @@ export const JarvisAssistant = React.forwardRef<
 JarvisAssistant.displayName = "JarvisAssistant";
 
 // Експортуємо додаткові властивості для використання в інших компонентах
-export { type JarvisAssistantProps }; 
+export { type JarvisAssistantProps };

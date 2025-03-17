@@ -54,7 +54,8 @@ const Index = () => {
   
   // Додаємо стан для відстеження статусу прослуховування Джарвіса
   const [isJarvisListening, setIsJarvisListening] = useState(false);
-  const jarvisRef = useRef<{ startListening?: () => void }>(null);
+  // Fix the ref type to match what JarvisAssistant expects
+  const jarvisRef = useRef<{ startListening: () => void }>(null);
   
   useEffect(() => {
     const savedTasks = localStorage.getItem('tasks');

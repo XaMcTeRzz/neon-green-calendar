@@ -14,13 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TelegramSettings, loadTelegramSettings, saveTelegramSettings, validateBotToken, sendTestReport } from "@/lib/telegram-service";
 import { initReportScheduler } from "@/lib/report-scheduler";
 
-// Додаємо імпорт для SpeechSynthesisUtterance, щоб протестувати звучання привітання
-declare global {
-  interface Window {
-    speechSynthesis: SpeechSynthesis;
-    SpeechSynthesisUtterance: typeof SpeechSynthesisUtterance;
-  }
-}
+// Fixing the declaration to avoid duplicate declarations of speechSynthesis
+// by removing the global declaration and just using the existing one
+// SpeechSynthesis and SpeechSynthesisUtterance are already defined in lib.dom.d.ts
 
 interface SettingsFormValues {
   telegramUsername: string;
@@ -917,86 +913,4 @@ export function Settings() {
                   name="googleCalendarId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ID Google Calendar</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="calendar_id@group.calendar.google.com" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Знайдіть ID календаря в налаштуваннях Google Calendar
-                      </FormDescription>
-                    </FormItem>
-                  )}
-                />
-                <Button variant="outline" className="w-full" type="button">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  Підключити Google Calendar
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* Reminders */}
-          <div className="glass-card p-4 rounded-xl space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <h3 className="text-base font-medium">Нагадування</h3>
-                <p className="text-sm text-muted-foreground">Налаштування сповіщень про задачі</p>
-              </div>
-              <FormField
-                control={form.control}
-                name="reminderEnabled"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Switch 
-                        checked={field.value} 
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {form.watch("reminderEnabled") && (
-              <div className="space-y-4 pt-2 border-t border-border/50">
-                <FormField
-                  control={form.control}
-                  name="defaultReminderTime"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Час нагадування за замовчуванням</FormLabel>
-                      <FormControl>
-                        <Input type="time" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Час, коли ви бажаєте отримувати нагадування
-                      </FormDescription>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-          </div>
-
-          <Button type="submit" className="w-full" disabled={isSaving}>
-            {isSaving ? (
-              <>
-                <SaveIcon className="mr-2 h-4 w-4 animate-spin" />
-                Зберігаємо...
-              </>
-            ) : (
-              <>
-                <SaveIcon className="mr-2 h-4 w-4" />
-                Зберегти налаштування
-              </>
-            )}
-          </Button>
-        </form>
-      </Form>
-    </div>
-  );
-}
+                      <FormLabel>ID Google Calendar
