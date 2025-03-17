@@ -7,9 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { toast } from "@/hooks/use-toast";
-import { BotIcon, CheckIcon, SaveIcon, CalendarIcon, MailIcon, BellIcon, Moon, Sun, BellRing, Languages, Trash2, Mic } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BotIcon, CheckIcon, SaveIcon, CalendarIcon, MailIcon, BellIcon, Moon, Sun, BellRing, Languages, Trash2, Mic, Clock, Send, AlertCircle } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TelegramSettings, loadTelegramSettings, saveTelegramSettings, validateBotToken, sendTestReport } from "@/lib/telegram-service";
+import { initReportScheduler } from "@/lib/report-scheduler";
 
 // Додаємо імпорт для SpeechSynthesisUtterance, щоб протестувати звучання привітання
 declare global {
@@ -63,6 +66,12 @@ export function Settings() {
   // Стан для відтворення тестового привітання
   const [isSpeaking, setIsSpeaking] = useState(false);
   
+  // Додаємо стан для налаштувань Telegram
+  const [telegramSettings, setTelegramSettings] = useState<TelegramSettings>(loadTelegramSettings());
+  const [isTesting, setIsTesting] = useState(false);
+  const [isValidatingToken, setIsValidatingToken] = useState(false);
+  const [isTokenValid, setIsTokenValid] = useState<boolean | null>(null);
+  
   // Initialize form with values from localStorage
   const form = useForm<SettingsFormValues>({
     defaultValues: {
@@ -72,9 +81,9 @@ export function Settings() {
       emailAddress: "",
       googleCalendarEnabled: false,
       googleCalendarId: "",
-      reminderEnabled: false,
-      defaultReminderTime: "09:00",
-      welcomeMessage: "Привіт! Це ваш бот-помічник для задач.",
+      reminderEnabled: true,
+      defaultReminderTime: "30",
+      welcomeMessage: "Вітаю! Я ваш бот-асистент для задач.",
     }
   });
 
@@ -88,6 +97,13 @@ export function Settings() {
     
     // Завантажуємо налаштування Джарвіса
     loadJarvisSettings();
+    
+    // Завантажуємо налаштування Telegram при ініціалізації
+    const settings = loadTelegramSettings();
+    setTelegramSettings(settings);
+    
+    // Ініціалізуємо планувальник звітів
+    initReportScheduler();
   }, [form]);
 
   // Функція для завантаження налаштувань Джарвіса
@@ -243,6 +259,113 @@ export function Settings() {
       ...prev,
       [field]: value
     }));
+  };
+
+  // Обробник зміни налаштувань Telegram
+  const handleTelegramSettingChange = (field: keyof TelegramSettings, value: any) => {
+    setTelegramSettings(prev => {
+      const newSettings = { ...prev, [field]: value };
+      saveTelegramSettings(newSettings);
+      return newSettings;
+    });
+  };
+
+  // Обробник зміни налаштувань розкладу
+  const handleScheduleSettingChange = (field: keyof TelegramSettings['reportSchedule'], value: any) => {
+    setTelegramSettings(prev => {
+      const newSettings = { 
+        ...prev, 
+        reportSchedule: { 
+          ...prev.reportSchedule, 
+          [field]: value 
+        } 
+      };
+      saveTelegramSettings(newSettings);
+      return newSettings;
+    });
+  };
+
+  // Перевірка валідності токена бота
+  const handleValidateToken = async () => {
+    if (!telegramSettings.botToken) {
+      toast({
+        title: "Помилка",
+        description: "Введіть токен бота",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsValidatingToken(true);
+    setIsTokenValid(null);
+
+    try {
+      const isValid = await validateBotToken(telegramSettings.botToken);
+      setIsTokenValid(isValid);
+
+      if (isValid) {
+        toast({
+          title: "Токен валідний",
+          description: "Токен бота успішно перевірено",
+        });
+      } else {
+        toast({
+          title: "Невалідний токен",
+          description: "Перевірте правильність введеного токена",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Помилка перевірки токена:", error);
+      setIsTokenValid(false);
+      toast({
+        title: "Помилка",
+        description: "Не вдалося перевірити токен бота",
+        variant: "destructive",
+      });
+    } finally {
+      setIsValidatingToken(false);
+    }
+  };
+
+  // Відправка тестового звіту
+  const handleSendTestReport = async () => {
+    if (!telegramSettings.botToken || !telegramSettings.chatId) {
+      toast({
+        title: "Помилка",
+        description: "Введіть токен бота та ID чату",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsTesting(true);
+
+    try {
+      const success = await sendTestReport();
+
+      if (success) {
+        toast({
+          title: "Тестовий звіт відправлено",
+          description: "Перевірте повідомлення у Telegram",
+        });
+      } else {
+        toast({
+          title: "Помилка",
+          description: "Не вдалося відправити тестовий звіт",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Помилка відправки тестового звіту:", error);
+      toast({
+        title: "Помилка",
+        description: "Виникла помилка при відправці звіту",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   return (
@@ -486,6 +609,171 @@ export function Settings() {
             <span>Видалити всі задачі</span>
           </Button>
         </CardContent>
+      </Card>
+
+      {/* Telegram Bot Settings */}
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BotIcon className="h-5 w-5" />
+            Telegram Bot
+          </CardTitle>
+          <CardDescription>Налаштування бота для відправки звітів</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Увімкнути Telegram бота</Label>
+              <p className="text-xs text-muted-foreground">Отримуйте звіти про задачі через Telegram</p>
+            </div>
+            <Switch 
+              checked={telegramSettings.enabled} 
+              onCheckedChange={(checked) => handleTelegramSettingChange('enabled', checked)}
+            />
+          </div>
+
+          {telegramSettings.enabled && (
+            <>
+              <Separator className="my-2" />
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bot-token">Токен бота</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="bot-token"
+                      type="password"
+                      value={telegramSettings.botToken}
+                      onChange={(e) => handleTelegramSettingChange('botToken', e.target.value)}
+                      placeholder="123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                      className="flex-1"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleValidateToken}
+                      disabled={isValidatingToken || !telegramSettings.botToken}
+                    >
+                      {isValidatingToken ? "Перевірка..." : "Перевірити"}
+                    </Button>
+                  </div>
+                  {isTokenValid !== null && (
+                    <p className={`text-xs ${isTokenValid ? "text-green-500" : "text-red-500"}`}>
+                      {isTokenValid ? "✓ Токен валідний" : "✗ Токен невалідний"}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Створіть бота через @BotFather в Telegram і отримайте токен
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="chat-id">ID чату</Label>
+                  <Input
+                    id="chat-id"
+                    value={telegramSettings.chatId}
+                    onChange={(e) => handleTelegramSettingChange('chatId', e.target.value)}
+                    placeholder="123456789"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Ваш особистий ID в Telegram або ID групового чату
+                  </p>
+                </div>
+
+                <Separator className="my-2" />
+
+                <div className="space-y-2">
+                  <Label>Розклад звітів</Label>
+                  
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <span className="text-sm font-medium">Щоденний звіт</span>
+                        <p className="text-xs text-muted-foreground">Отримуйте звіт про задачі щодня</p>
+                      </div>
+                      <Switch 
+                        checked={telegramSettings.reportSchedule.daily} 
+                        onCheckedChange={(checked) => handleScheduleSettingChange('daily', checked)}
+                      />
+                    </div>
+
+                    {telegramSettings.reportSchedule.daily && (
+                      <div className="ml-6 space-y-2">
+                        <Label htmlFor="daily-time">Час відправки</Label>
+                        <Input
+                          id="daily-time"
+                          type="time"
+                          value={telegramSettings.reportSchedule.dailyTime}
+                          onChange={(e) => handleScheduleSettingChange('dailyTime', e.target.value)}
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <span className="text-sm font-medium">Щотижневий звіт</span>
+                        <p className="text-xs text-muted-foreground">Отримуйте підсумковий звіт за тиждень</p>
+                      </div>
+                      <Switch 
+                        checked={telegramSettings.reportSchedule.weekly} 
+                        onCheckedChange={(checked) => handleScheduleSettingChange('weekly', checked)}
+                      />
+                    </div>
+
+                    {telegramSettings.reportSchedule.weekly && (
+                      <div className="ml-6 space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="weekly-day">День тижня</Label>
+                          <Select 
+                            value={telegramSettings.reportSchedule.weeklyDay.toString()} 
+                            onValueChange={(value) => handleScheduleSettingChange('weeklyDay', parseInt(value))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Оберіть день" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">Понеділок</SelectItem>
+                              <SelectItem value="2">Вівторок</SelectItem>
+                              <SelectItem value="3">Середа</SelectItem>
+                              <SelectItem value="4">Четвер</SelectItem>
+                              <SelectItem value="5">П'ятниця</SelectItem>
+                              <SelectItem value="6">Субота</SelectItem>
+                              <SelectItem value="0">Неділя</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="weekly-time">Час відправки</Label>
+                          <Input
+                            id="weekly-time"
+                            type="time"
+                            value={telegramSettings.reportSchedule.weeklyTime}
+                            onChange={(e) => handleScheduleSettingChange('weeklyTime', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+        {telegramSettings.enabled && (
+          <CardFooter className="flex justify-end gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleSendTestReport}
+              disabled={isTesting || !telegramSettings.botToken || !telegramSettings.chatId}
+              className="flex items-center gap-1"
+            >
+              <Send className="h-4 w-4" />
+              {isTesting ? "Відправка..." : "Надіслати тестовий звіт"}
+            </Button>
+          </CardFooter>
+        )}
       </Card>
 
       <Form {...form}>

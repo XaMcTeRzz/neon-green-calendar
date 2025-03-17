@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { initReportScheduler } from './lib/report-scheduler';
 
 // Додаємо клас dark до html елементу для використання темної теми
 document.documentElement.classList.add("dark");
@@ -27,6 +28,9 @@ const initializeTheme = () => {
 
 // Ініціалізуємо тему перед рендерингом додатку
 initializeTheme();
+
+// Ініціалізуємо планувальник звітів
+initReportScheduler();
 
 // Встановлюємо слухач для автоматичної зміни теми при зміні системних налаштувань
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
