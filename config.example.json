@@ -1,0 +1,36 @@
+{
+  "telegram": {
+    "token": "YOUR_TELEGRAM_BOT_TOKEN",
+    "allowed_chat_ids": [123456789],
+    "webhook_url": "https://your-domain.com/webhook/telegram"
+  },
+  "viber": {
+    "token": "YOUR_VIBER_BOT_TOKEN",
+    "webhook_url": "https://your-domain.com/webhook/viber"
+  },
+  "whatsapp": {
+    "token": "YOUR_WHATSAPP_TOKEN",
+    "phone_number_id": "YOUR_PHONE_NUMBER_ID",
+    "webhook_url": "https://your-domain.com/webhook/whatsapp"
+  },
+  "google_calendar": {
+    "calendar_id": "primary",
+    "credentials_file": "credentials.json",
+    "token_file": "token.json"
+  },
+  "reporting": {
+    "daily_report_time": "20:00",
+    "timezone": "Europe/Kiev"
+  },
+  "tasks": {
+    "tasks_file": "tasks.json",
+    "backup_dir": "backup"
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8443,
+    "use_ssl": true,
+    "ssl_cert": "cert.pem",
+    "ssl_key": "key.pem"
+  }
+} 

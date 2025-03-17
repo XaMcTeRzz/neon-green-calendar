@@ -1,69 +1,103 @@
-# Welcome to your Lovable project
+# Telegram Task Bot
 
-## Project info
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/username/telegram-task-bot/python-test.yml?branch=main)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-**URL**: https://lovable.dev/projects/a644a59b-28fc-401e-9cf2-ae4c2c55fa8f
+Telegram бот для керування задачами з інтеграцією Google Calendar. Бот підтримує щоденну звітність про виконані та невиконані задачі, а також дозволяє синхронізувати події з Google Calendar.
 
-## How can I edit this code?
+## Функціональність
 
-There are several ways of editing your application.
+- 📋 Керування задачами (додавання, редагування, видалення)
+- 📅 Інтеграція з Google Calendar
+- 📊 Щоденні звіти про статус задач
+- 🌐 Підтримка декількох месенджерів (Telegram, Viber, WhatsApp)
+- 🔄 Webhook-сервер для обробки вхідних повідомлень
+- 🔒 Безпечне зберігання конфіденційних даних
 
-**Use Lovable**
+## Структура проекту
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a644a59b-28fc-401e-9cf2-ae4c2c55fa8f) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+telegram-task-bot/
+├── .github/
+│   └── workflows/
+│       └── python-test.yml    # GitHub Actions для тестування
+├── src/
+│   ├── telegram_bot_api.py    # Базова реалізація Telegram API
+│   ├── telegram_bot_extended.py # Розширена версія бота з керуванням задачами
+│   ├── task_manager.py        # Клас для керування задачами
+│   ├── google_calendar_integration.py # Інтеграція з Google Calendar
+│   ├── multi_messenger.py     # Підтримка декількох месенджерів
+│   ├── webhook_server.py      # Веб-сервер для webhook
+│   └── lib/                   # Допоміжні модулі
+├── .gitignore                 # Файли, які слід ігнорувати в Git
+├── requirements.txt           # Залежності Python
+└── README.md                  # Цей файл
 ```
 
-**Edit a file directly in GitHub**
+## Встановлення
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. Клонуйте репозиторій:
+```bash
+git clone https://github.com/username/telegram-task-bot.git
+cd telegram-task-bot
+```
 
-**Use GitHub Codespaces**
+2. Створіть віртуальне середовище та встановіть залежності:
+```bash
+python -m venv venv
+source venv/bin/activate  # На Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+3. Налаштуйте конфігурацію:
+   - Створіть файл `config.json` зі своїми токенами та налаштуваннями
+   - Для інтеграції з Google Calendar, отримайте `credentials.json` з [Google Cloud Console](https://console.cloud.google.com/)
 
-## What technologies are used for this project?
+## Використання
 
-This project is built with .
+### Запуск бота
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+python src/telegram_bot_extended.py
+```
 
-## How can I deploy this project?
+### Запуск webhook-сервера
 
-Simply open [Lovable](https://lovable.dev/projects/a644a59b-28fc-401e-9cf2-ae4c2c55fa8f) and click on Share -> Publish.
+```bash
+python src/webhook_server.py
+```
 
-## I want to use a custom domain - is that possible?
+### Налаштування Telegram бота
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+1. Створіть нового бота через [@BotFather](https://t.me/BotFather)
+2. Отримайте токен бота та додайте його в `config.json`
+3. Встановіть команди для бота через BotFather:
+   ```
+   start - Почати роботу з ботом
+   help - Отримати довідку
+   settings - Налаштування бота
+   add_task - Додати нову задачу
+   list_tasks - Показати список задач
+   sync_calendar - Синхронізувати з Google Calendar
+   report - Отримати звіт по задачам
+   ```
+
+## API Документація
+
+Детальна документація API доступна у файлі [API_DOCS.md](src/API_DOCS.md).
+
+## Розгортання
+
+Інструкції з розгортання бота на різних платформах доступні у файлі [GITHUB_SETUP.md](GITHUB_SETUP.md).
+
+## Ліцензія
+
+Цей проект поширюється під ліцензією MIT. Див. файл [LICENSE](LICENSE) для отримання додаткової інформації.
+
+## Автори
+
+Бот розроблено за допомогою Claude 3.7 Sonnet.
+
+## Зробити внесок
+
+Внески вітаються! Будь ласка, відкрийте issue або створіть pull request, якщо ви хочете покращити проект.

@@ -1,0 +1,52 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "name": "Підготувати презентацію",
+      "completed": false,
+      "due_date": "2025-03-20T15:00:00",
+      "priority": "high",
+      "category": "робота"
+    },
+    {
+      "id": 2,
+      "name": "Купити продукти",
+      "completed": true,
+      "due_date": "2025-03-15T18:00:00",
+      "priority": "medium",
+      "category": "особисте"
+    },
+    {
+      "id": 3,
+      "name": "Зателефонувати клієнту",
+      "completed": false,
+      "due_date": "2025-03-16T11:30:00",
+      "priority": "high",
+      "category": "робота"
+    },
+    {
+      "id": 4,
+      "name": "Оплатити комунальні послуги",
+      "completed": false,
+      "due_date": "2025-03-25T23:59:59",
+      "priority": "medium",
+      "category": "фінанси"
+    },
+    {
+      "id": 5,
+      "name": "Тренування в спортзалі",
+      "completed": false,
+      "due_date": "2025-03-18T19:00:00",
+      "priority": "low",
+      "category": "здоров'я"
+    }
+  ],
+  "last_id": 5,
+  "categories": ["робота", "особисте", "фінанси", "здоров'я", "навчання"],
+  "stats": {
+    "total": 5,
+    "completed": 1,
+    "pending": 4,
+    "completion_rate": 20
+  }
+} 
